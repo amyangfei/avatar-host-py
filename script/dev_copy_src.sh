@@ -2,8 +2,10 @@
 
 cur=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 dst=/var/www/yagra
+log=/var/log/yagra/app.log
 
 sudo rsync -av --progress --delete --exclude \*.pyc $cur/../src/ $dst
-sudo chown -R root:root $dst
-sudo touch $dst/debug.log
-sudo chmod a+w $dst/debug.log
+if [ ! -f $log ]; then
+    touch $log
+    chown www-data:www-data $log
+fi

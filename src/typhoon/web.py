@@ -11,9 +11,9 @@ import datetime
 import traceback
 
 import typhoon
+from typhoon.log import default_log_setting, app_log
 from typhoon.util import (import_object, format_timestamp, unicode_type,
-                        json_encode, utf8, debug_log, unquote_or_none,
-                        native_str)
+                        json_encode, utf8, unquote_or_none, native_str)
 from typhoon.httputil import HTTPConnection, HTTPRequest, HTTPHeaders
 
 
@@ -222,7 +222,20 @@ class Application(object):
     def __init__(self, handlers=None, **settings):
         self.handlers = []
         self.settings = settings
+        self.log_setting(**settings)
         self.add_handlers(handlers)
+
+    def log_setting(self, **settings):
+        if 'app_log' in settings:
+            app_log_cfg = settings['app_log']
+            assert isinstance(app_log_cfg, dict)
+            assert 'redirect_path' in app_log_cfg
+            redirect_path = app_log_cfg.get('redirect_path')
+            log_level = app_log_cfg.get('log_level', 'DEBUG')
+            log_format_str = app_log_cfg.get('log_format_str', None)
+            default_log_setting(redirect_path, log_level, log_format_str)
+        else:
+            default_log_setting()
 
     def add_handlers(self, handlers):
         """Appends the given handlers to our handler list.
@@ -239,7 +252,7 @@ class Application(object):
         connection = HTTPConnection(stream)
 
         env = os.environ
-        debug_log(str(env))
+        app_log.debug('env %s', str(env))
         request = HTTPRequest(
             method = env.get("REQUEST_METHOD"),
             uri = env.get("REQUEST_URI"),

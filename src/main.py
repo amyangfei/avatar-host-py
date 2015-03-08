@@ -21,10 +21,18 @@ class TestHandler(typhoon.web.RequestHandler):
 
 
 def main():
+    settings = {
+        'app_log': {
+            'redirect_path': '/var/log/yagra/app.log',
+            'log_level': 'DEBUG',
+            'log_format_str': '%(asctime)s [%(levelname)s] %(pathname)s' \
+                                ':%(lineno)s %(message)s',
+        }
+    }
     app = typhoon.web.Application([
         (r"/", MainHandler),
         (r"/regex/([0-9a-f]+)", TestHandler),
-    ])
+    ], **settings)
     app.run()
 
 
