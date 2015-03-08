@@ -6,10 +6,14 @@ import os
 import sys
 import time
 import httplib
+import numbers
+import datetime
+import traceback
 
 import typhoon
 from typhoon.util import (import_object, format_timestamp, unicode_type,
-                        json_encode, utf8, debug_log, unquote_or_none)
+                        json_encode, utf8, debug_log, unquote_or_none,
+                        native_str)
 from typhoon.httputil import HTTPConnection, HTTPRequest, HTTPHeaders
 
 
@@ -86,6 +90,31 @@ class RequestHandler(object):
         """Hook for subclass initialization."""
         pass
 
+    def set_status(self, status_code, reason=None):
+        self._status_code = status_code
+        if reason is not None:
+            self._reason = native_str(reason)
+        else:
+            try:
+                self._reason = httplib.responses[status_code]
+            except KeyError:
+                raise ValueError("unknown status code %d", status_code)
+
+    def set_header(self, name, value):
+        self._headers[name] = self._convert_header_value(value)
+
+    def _convert_header_value(self, value):
+        if isinstance(value, bytes):
+            return value
+        elif isinstance(value, unicode_type):
+            return value.encode('utf-8')
+        elif isinstance(value, numbers.Integral):
+            return str(value)
+        elif isinstance(value, datetime.datetime):
+            return format_timestamp(value)
+        else:
+            raise TypeError("Unsupported header value %r" % value)
+
     def get(self, *args, **kwargs):
         raise HTTPError(405)
 
@@ -107,6 +136,9 @@ class RequestHandler(object):
                 raise MissingArgumentError(name)
             return default
         return args[-1]
+
+    def prepare(self):
+        pass
 
     def write(self, chunk):
         if not isinstance(chunk, (bytes, unicode_type, dict)):
@@ -133,10 +165,57 @@ class RequestHandler(object):
         self.request.write(self._gen_resp_header())
         self.request.write("".join(self._write_buffer))
 
+    def _handle_requeset_exception(self, e):
+        if isinstance(e, HTTPError):
+            if e.status_code not in httplib.responses and not e.reason:
+                # TODO: log error("Bad HTTP status code: %d", e.status_code)
+                self.send_error(500, exc_info=sys.exc_info())
+            else:
+                self.send_error(e.status_code, exc_info=sys.exc_info())
+        else:
+            self.send_error(500, exc_info=sys.exc_info())
+
+    def write_error(self, status_code, **kwargs):
+        # TODO: debug mode switch
+        self.set_header('Content-Type', 'text/plain')
+        for line in traceback.format_exception(*kwargs["exc_info"]):
+            self.write(line)
+
+    def send_error(self, status_code=500, **kwargs):
+        """Sends the given HTTP error code to the browser."""
+        self.clear()
+        reason = kwargs.get('reason')
+        if 'exc_info' in kwargs:
+            exception = kwargs['exc_info'][1]
+            if isinstance(exception, HTTPError) and exception.reason:
+                reason = exception.reason
+        self.set_status(status_code, reason=reason)
+        try:
+            self.write_error(status_code, **kwargs)
+        except Exception:
+            # TODO: log exception
+            pass
+
     def _execute(self, *args):
-        # TODO: error handling
-        getattr(self, self.request.method.lower())(*args)
-        self.flush()
+        try:
+            self.prepare()
+            getattr(self, self.request.method.lower())(*args)
+        except Exception, e:
+            self._handle_requeset_exception(e)
+        finally:
+            self.flush()
+
+
+class ErrorHandler(RequestHandler):
+    """Generates an error response with ``status_code`` for all requests."""
+    def initialize(self, status_code):
+        self.set_status(status_code)
+
+    def prepare(self):
+        raise HTTPError(self._status_code)
+
+    def check_xsrf_cookie(self):
+        pass
 
 
 class Application(object):
@@ -161,14 +240,11 @@ class Application(object):
 
         env = os.environ
         debug_log(str(env))
-
-        headers = {}
-
         request = HTTPRequest(
             method = env.get("REQUEST_METHOD"),
             uri = env.get("REQUEST_URI"),
             version = env.get('SERVER_PROTOCOL'),
-            headers = headers,
+            headers = {},
             host = env.get("HTTP_HOST"),
             cookie = env.get('HTTP_COOKIE'),
             remote_addr = env.get('HTTP_COOKIE'),
@@ -176,22 +252,22 @@ class Application(object):
         )
         self._request = request
 
-    def _find_handler(self):
-        request = self._request
-        path = request.path
+    def _run(self):
+        path_args = []
+        handler = None
 
         for spec in self.handlers:
-            match = spec.regex.match(path)
+            match = spec.regex.match(self._request.path)
             if match:
-                self.handler_class = spec.handler_class(self, request)
-                self.path_args = [unquote_or_none(s) for s in match.groups()]
-                self.handler_kwargs = spec.handler_kwargs
-                return
-        # TODO: invalid handler handling
+                handler = spec.handler_class(self, self._request)
+                path_args = [unquote_or_none(s) for s in match.groups()]
+                # TODO: path_kwargs
+                break
+        if not handler:
+            handler = ErrorHandler(self, self._request, status_code=404)
 
-    def _run(self):
-        self._find_handler()
-        self.handler_class._execute(*self.path_args, **self.handler_kwargs)
+        # TODO: named url pattern using path_kwargs
+        handler._execute(*path_args)
 
     def run(self):
         self._prepare_run(StdStream())
