@@ -5,12 +5,11 @@ import re
 import os
 import sys
 import time
-import urllib
 import httplib
 
 import typhoon
-from typhoon.util import (import_object, native_str, format_timestamp,
-                            unicode_type, json_encode, utf8, debug_log)
+from typhoon.util import (import_object, format_timestamp, unicode_type,
+                        json_encode, utf8, debug_log, unquote_or_none)
 from typhoon.httputil import HTTPConnection, HTTPRequest, HTTPHeaders
 
 
@@ -21,7 +20,7 @@ class StdStream(object):
 
 class URLSpec(object):
     """Specifies mappings between URLs and handlers."""
-    def __init__(self, pattern, handler):
+    def __init__(self, pattern, handler, kwargs=None):
         if not pattern.endswith('$'):
             pattern += '$'
         self.regex = re.compile(pattern)
@@ -32,6 +31,7 @@ class URLSpec(object):
             handler = import_object(handler)
 
         self.handler_class = handler
+        self.handler_kwargs = kwargs or {}
 
 
 class HTTPError(Exception):
@@ -51,6 +51,15 @@ class HTTPError(Exception):
             return message + " (" + (self.log_message % self.args) + ")"
         else:
             return message
+
+
+class MissingArgumentError(HTTPError):
+    """Exception raised by `RequestHandler.get_argument`."""
+
+    def __init__(self, arg_name):
+        super(MissingArgumentError, self).__init__(
+            400, 'Missing argument %s' % arg_name)
+        self.arg_name = arg_name
 
 
 class RequestHandler(object):
@@ -82,6 +91,22 @@ class RequestHandler(object):
 
     def post(self, *args, **kwargs):
         raise HTTPError(405)
+
+    def get_arguments(self, name):
+        args = []
+        for v in self.request.arguments.get(name, []):
+            args.append(v)
+        return args
+
+    _ARG_DEFAULT = []
+
+    def get_argument(self, name, default=_ARG_DEFAULT):
+        args = self.get_arguments(name)
+        if not args:
+            if default is self._ARG_DEFAULT:
+                raise MissingArgumentError(name)
+            return default
+        return args[-1]
 
     def write(self, chunk):
         if not isinstance(chunk, (bytes, unicode_type, dict)):
@@ -128,7 +153,7 @@ class Application(object):
         """
         for spec in handlers:
             if isinstance(spec, tuple):
-                assert len(spec) == 2
+                assert len(spec) in (2, 3)
             self.handlers.append(URLSpec(*spec))
 
     def _prepare_run(self, stream):
@@ -140,12 +165,15 @@ class Application(object):
         headers = {}
 
         request = HTTPRequest(
-            method = unicode(env["REQUEST_METHOD"], encoding="utf-8"),
-            uri = unicode(env["REQUEST_URI"], encoding="utf-8"),
-            version="HTTP/1.1",
-            headers=headers,
-            host=unicode(env.get("HTTP_HOST"), encoding="utf-8"),
-            connection=connection)
+            method = env.get("REQUEST_METHOD"),
+            uri = env.get("REQUEST_URI"),
+            version = env.get('SERVER_PROTOCOL'),
+            headers = headers,
+            host = env.get("HTTP_HOST"),
+            cookie = env.get('HTTP_COOKIE'),
+            remote_addr = env.get('HTTP_COOKIE'),
+            connection = connection,
+        )
         self._request = request
 
     def _find_handler(self):
@@ -156,15 +184,14 @@ class Application(object):
             match = spec.regex.match(path)
             if match:
                 self.handler_class = spec.handler_class(self, request)
-                self.handler_args = [
-                        unicode(urllib.unquote_plus(native_str(m)), "utf-8")
-                        for m in match.groups()]
+                self.path_args = [unquote_or_none(s) for s in match.groups()]
+                self.handler_kwargs = spec.handler_kwargs
                 return
         # TODO: invalid handler handling
 
     def _run(self):
         self._find_handler()
-        self.handler_class._execute(*self.handler_args)
+        self.handler_class._execute(*self.path_args, **self.handler_kwargs)
 
     def run(self):
         self._prepare_run(StdStream())

@@ -8,6 +8,7 @@ import datetime
 import numbers
 import calendar
 import json
+import urllib
 
 
 def import_object(name):
@@ -84,3 +85,35 @@ def debug_log(log_str, fname='debug.log'):
         f.write(log_str)
         f.write('\n')
 
+
+def url_unescape(value, encoding='utf-8', plus=True):
+    """Decodes the given value from a URL.
+
+    The argument may be either a byte or unicode string.
+
+    If encoding is None, the result will be a byte string.  Otherwise,
+    the result is a unicode string in the specified encoding.
+
+    If ``plus`` is true (the default), plus signs will be interpreted
+    as spaces (literal plus signs must be represented as "%2B").  This
+    is appropriate for query strings and form-encoded values but not
+    for the path component of a URL.  Note that this default is the
+    reverse of Python's urllib module.
+
+    """
+    unquote = (urllib.unquote_plus if plus else urllib.unquote)
+    if encoding is None:
+        return unquote(utf8(value))
+    else:
+        return unicode_type(unquote(utf8(value)), encoding)
+
+def unquote_or_none(s):
+    """None-safe wrapper around url_unescape to handle unamteched optional
+    groups correctly.
+
+    Note that args are passed as bytes so the handler can decide what
+    encoding to use.
+    """
+    if s is None:
+        return s
+    return url_unescape(s, encoding=None, plus=False)

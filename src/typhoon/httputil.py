@@ -22,8 +22,9 @@ class HTTPConnection(object):
 
 
 class HTTPRequest(object):
-    def __init__(self, method=None, uri=None, version="HTTP/1.1", headers=None,
-                 body=None, host=None, files=None, connection=None,
+    def __init__(self, method=None, uri=None, version=None, headers=None,
+                 body=None, host=None, cookie=None, remote_addr=None,
+                 files=None, connection=None,
                  ):
         self.method = method
         self.uri = uri
