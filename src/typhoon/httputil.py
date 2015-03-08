@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import cgi
 import time
 import copy
 import Cookie
@@ -23,8 +24,8 @@ class HTTPConnection(object):
 
 class HTTPRequest(object):
     def __init__(self, method=None, uri=None, version=None, headers=None,
-                 body=None, host=None, cookie=None, remote_addr=None,
-                 files=None, connection=None,
+                 body=None, host=None, cookie_string=None, remote_addr=None,
+                 connection=None,
                  ):
         self.method = method
         self.uri = uri
@@ -33,7 +34,8 @@ class HTTPRequest(object):
         self.body = body or b""
 
         self.host = host or self.headers.get("Host") or "127.0.0.1"
-        self.files = files or {}
+        self.cookie_string =  cookie_string
+        self.remote_addr = remote_addr
         self.connection = connection
         self._start_time = time.time()
         self._finish_time = None
@@ -41,7 +43,14 @@ class HTTPRequest(object):
         self.path, sep, self.query = uri.partition('?')
         self.arguments = parse_qs(self.query, keep_blank_values=True)
         self.query_arguments = copy.deepcopy(self.arguments)
-        self.body_arguments = {}
+        self.upload_files = {}
+
+        form = cgi.FieldStorage()
+        for k in form.keys():
+            if form[k].file:
+                self.upload_files[k] = form[k]
+            else:
+                self.arguments.setdefault(k, []).extend(form.getlist(k))
 
     def write(self, chunk):
         self.connection.write(chunk)

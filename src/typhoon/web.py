@@ -204,6 +204,8 @@ class RequestHandler(object):
             self._handle_requeset_exception(e)
         finally:
             self.flush()
+            app_log.info('%s %s %s %s', self._status_code, self.request.method,
+                        self.request.uri, self.request.remote_addr)
 
 
 class ErrorHandler(RequestHandler):
@@ -252,15 +254,14 @@ class Application(object):
         connection = HTTPConnection(stream)
 
         env = os.environ
-        app_log.debug('env %s', str(env))
         request = HTTPRequest(
             method = env.get("REQUEST_METHOD"),
             uri = env.get("REQUEST_URI"),
             version = env.get('SERVER_PROTOCOL'),
             headers = {},
             host = env.get("HTTP_HOST"),
-            cookie = env.get('HTTP_COOKIE'),
-            remote_addr = env.get('HTTP_COOKIE'),
+            cookie_string = env.get('HTTP_COOKIE'),
+            remote_addr = env.get('REMOTE_ADDR'),
             connection = connection,
         )
         self._request = request

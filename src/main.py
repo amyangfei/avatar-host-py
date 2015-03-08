@@ -5,6 +5,7 @@ import cgitb
 cgitb.enable()
 
 import typhoon.web
+from typhoon.log import app_log
 
 
 class MainHandler(typhoon.web.RequestHandler):
@@ -14,10 +15,13 @@ class MainHandler(typhoon.web.RequestHandler):
 
 class TestHandler(typhoon.web.RequestHandler):
     def get(self, idx):
-        p = self.get_argument('page', '0')
-        self.write('test handler\n')
-        self.write('page=' + p)
-        self.write('idx=' + idx)
+        self.write('test handler idx={}\n'.format(idx))
+
+    def post(self, idx):
+        name = self.get_argument('name', 'oooppps')
+        pid = self.get_argument('pid', '0')
+        app_log.info('post argument name=%s pid=%s', name, pid)
+        self.write('receive name = {0} id = {1}\n'.format(name, pid))
 
 
 def main():
