@@ -8,7 +8,7 @@ derived from [moody-templates](https://github.com/etianen/moody-templates)
 
 import re
 import os
-from functools import partial
+from functools import partial, wraps
 
 
 # Template Related Class #######################################################
@@ -114,7 +114,8 @@ class Lexer(object):
             self.index = bit.end()
 
         if self.index < len(self.template_string):
-            yield self.lineno, TOKEN_MAP[TOKEN_STR], self.template_string[self.index:]
+            yield self.lineno, TOKEN_MAP[TOKEN_STR],\
+                self.template_string[self.index:]
 
 
 _escape_map = {
@@ -170,9 +171,10 @@ class Parser(object):
                         if segment:
                             break
                     if not segment:
-                        return end_segment_handler(token_contents, segment)
+                        return end_segment_handler(token_contents, segments)
                 else:
-                    assert False, "{} isn't a valid token type.".format(token_type)
+                    assert False, "{} isn't a valid token type.".\
+                            format(token_type)
                 segments.append((lineno, segment))
             except TemplateCompileError:
                 raise
@@ -188,6 +190,20 @@ class Parser(object):
                 raise SyntaxError("{{% {} %}} is not a recognized tag." \
                         .format(token_contents))
             return segments
+        return self.parse_template_segment(end_segment_handler)
+
+    def parse_block(self, start_tag, end_tag, regex):
+        """Parse a block looking for a macro token that matches the given regex
+        """
+        def end_segment_handler(token_contents, segments):
+            if not token_contents:
+                raise SyntaxError("{} tag could not find a corresponding {}."\
+                        .format(start_tag, end_tag))
+            match = regex.match(token_contents)
+            if not match:
+                raise SyntaxError("{} is not a recognizd tag".\
+                        format(token_contents))
+            return match, TemplateBlock(segments, self.run.get('name'))
         return self.parse_template_segment(end_segment_handler)
 
 
@@ -224,7 +240,55 @@ def _var_segment(evaluate, context):
 
 # Macro Extension ##############################################################
 
-DEFAULT_MACROS = ()
+def token_regex_check(regex):
+    regex = re.compile(regex, re.DOTALL)
+    def decorator(func):
+        @wraps(func)
+        def wrapper(parser_run, token):
+            match = regex.match(token)
+            if match:
+                return func(parser_run, *match.groups(), **match.groupdict())
+            return None
+        return wrapper
+    return decorator
+
+
+def if_block(clauses, else_block, context):
+    for evaluate, block in clauses:
+        if evaluate(context):
+            block.render_value_in_context(context)
+            return
+    if else_block:
+        else_block.render_value_in_context(context)
+
+
+RE_IF_BLOCK = re.compile("^(elif) (.+?)$|^(else)$|^(endif)$")
+
+@token_regex_check("^if\s+(.+?)$")
+def if_macro(parser, expression):
+    clauses = []
+    else_tag = False
+    else_block = None
+    while True:
+        match, block = parser.parse_block("if", "endif", RE_IF_BLOCK)
+        if else_tag:
+            else_block = block
+        else:
+            clauses.append((_val_evaluate(expression), block))
+        elif_flag, elif_expression, else_flag, endif_flag = match.groups()
+        if elif_flag:
+            if else_tag:
+                raise SyntaxError("elif tag cannot come after else.")
+            expression = elif_expression
+        elif else_flag:
+            if else_tag:
+                raise SyntaxError("Only one else tag is allowed per if")
+            else_tag = True
+        elif endif_flag:
+            break
+    return partial(if_block, clauses, else_block)
+
+DEFAULT_MACROS = (if_macro, )
 
 
 # Public Interface #############################################################
