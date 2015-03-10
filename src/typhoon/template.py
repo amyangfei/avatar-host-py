@@ -122,22 +122,16 @@ class Lexer(object):
                 self.template_string[self.index:]
 
 
-_escape_map = {
-    ord("&"): "&amp;",
-    ord("<"): "&lt;",
-    ord(">"): "&gt;",
-    ord('"'): "&quot;",
-    ord("'"): "&#x27;",
-}
-
 def escape_html(value):
-    return value.translate(_escape_map)
+    import cgi
+    return cgi.escape(value, quote=True)
 
 
 DEFAULT_ESCAPE_FUNCS = {
     ".html": escape_html,
     ".htm": escape_html,
 }
+
 
 class Parser(object):
     def __init__(self, macros, escape_func=DEFAULT_ESCAPE_FUNCS):
@@ -352,6 +346,77 @@ def for_macro(parser, name, variable):
 
 
 DEFAULT_MACROS = (if_macro, for_macro, )
+
+
+# Template Loader ##############################################################
+
+class BaseSource(object):
+    def load(self, template_name):
+        raise NotImplementedError
+
+
+class MemorySource(BaseSource):
+    def __init__(self, template_map):
+        """template_map mapping from a template name to template content"""
+        self.templates = template_map
+
+    def load(self, template_name):
+        return self.templates.get(template_name, None)
+
+    def __str__(self):
+        return "__memory__"
+
+
+class DirectorySource(BaseSource):
+    def __init__(self, dirname):
+        self.dirname = dirname
+
+    def load(self, template_name):
+        file_path = os.path.abspath(os.path.join(self.dirname, template_name))
+        if os.path.exists(file_path):
+            with open(file_path, "r") as template_file:
+                return template_file.read()
+        return None
+
+    def __str__(self):
+        return self.dirname
+
+
+class TemplateNotFoundError(Exception):
+    pass
+
+
+class Loader(object):
+    def __init__(self, sources, parser):
+        self._sources = sources
+        self._parser = parser
+        self._cache = {}
+
+    def clear_cache(self):
+        self._cache.clear()
+
+    def compile(self, template_str, name="__string__", params=None, meta=None):
+        default_meta = {
+            "__loader__": self,
+        }
+        default_meta.update(meta or {})
+        return self._parser.compile(template_str, name, params, default_meta)
+
+    def load(self, template_name):
+        if template_name in self._cache:
+            return self._cache[template_name]
+        for source in self._sources:
+            template_contents = source.load(template_name)
+            if template_contents is not None:
+                compiled_template = self.compile(
+                        template_contents, template_name, {}, {})
+                self._cache[template_name] = compiled_template
+                return compiled_template
+        raise TemplateNotFoundError(
+                "could not found template {}".format(template_name))
+
+    def render(self, template_name, **params):
+        return self.load(template_name).render(**params)
 
 
 # Public Interface #############################################################

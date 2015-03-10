@@ -60,5 +60,30 @@ class TestRender(unittest.TestCase):
         template4 = template.compiler("{% for n in range(5) %}{% if n > 2 %}{{ n }}{% endif %}{% endfor %}")
         self.assertEqual(template4.render(), "34")
 
+
+test_loader = template.Loader(
+    sources = [
+        template.MemorySource({
+            "base.html": "<html><head>{{ head }}</head><body>{{ body }}</body></html>",
+        }),
+    ],
+    parser = template.default_parser,
+)
+
+
+class TestLoader(unittest.TestCase):
+
+    def setUp(self):
+        test_loader.clear_cache()
+
+    def testLoad(self):
+        self.assertTrue(test_loader.load("base.html"))
+
+    def testValEval(self):
+        self.assertEqual(test_loader.render(
+            "base.html", head="hello", body="world"),
+            "<html><head>hello</head><body>world</body></html>")
+
+
 if __name__ == '__main__':
     unittest.main()
