@@ -7,10 +7,10 @@ import copy
 import Cookie
 from urlparse import parse_qs
 
-from typhoon.util import native_str
+from typhoon.util import utf8
 
 
-class HTTPConnection(object):
+class CGIConnection(object):
     def __init__(self, stream):
         self.stream = stream
 
@@ -22,27 +22,25 @@ class HTTPConnection(object):
             self.stream.close()
 
 
-class HTTPRequest(object):
+class CGIRequest(object):
     def __init__(self, method=None, uri=None, version=None, headers=None,
                  body=None, host=None, cookie_string=None, remote_addr=None,
-                 connection=None,
+                 connection=None, start_time=None
                  ):
         self.method = method
         self.uri = uri
         self.version = version
         self.headers = headers
-        self.body = body or b""
 
         self.host = host or self.headers.get("Host") or "127.0.0.1"
         self.cookie_string =  cookie_string
         self.remote_addr = remote_addr
         self.connection = connection
-        self._start_time = time.time()
+        self._start_time = start_time or time.time()
         self._finish_time = None
 
         self.path, sep, self.query = uri.partition('?')
         self.arguments = parse_qs(self.query, keep_blank_values=True)
-        self.query_arguments = copy.deepcopy(self.arguments)
         self.upload_files = {}
 
         form = cgi.FieldStorage()
@@ -62,7 +60,7 @@ class HTTPRequest(object):
             self._cookies = Cookie.SimpleCookie()
             if "Cookie" in self.headers:
                 try:
-                    self._cookies.load(native_str(self.headers["Cookie"]))
+                    self._cookies.load(utf8(self.headers["Cookie"]))
                 except Exception:
                     self._cookies = {}
         return self._cookies
@@ -86,7 +84,6 @@ class HTTPHeaders(dict):
 
     def get_list(self, name):
         """Returns all values for the given header as a list."""
-        # norm_name = _normalized_headers[name]
         return self._as_list.get(name, [])
 
     def get_all(self):

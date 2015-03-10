@@ -13,8 +13,8 @@ import traceback
 import typhoon
 from typhoon.log import default_log_setting, app_log
 from typhoon.util import (import_object, format_timestamp, unicode_type,
-                        json_encode, utf8, unquote_or_none, native_str)
-from typhoon.httputil import HTTPConnection, HTTPRequest, HTTPHeaders
+                        json_encode, utf8, unquote_or_none)
+from typhoon.cgiutil import CGIConnection, CGIRequest, HTTPHeaders
 
 
 class StdStream(object):
@@ -93,7 +93,7 @@ class RequestHandler(object):
     def set_status(self, status_code, reason=None):
         self._status_code = status_code
         if reason is not None:
-            self._reason = native_str(reason)
+            self._reason = utf8(reason)
         else:
             try:
                 self._reason = httplib.responses[status_code]
@@ -204,8 +204,10 @@ class RequestHandler(object):
             self._handle_requeset_exception(e)
         finally:
             self.flush()
-            app_log.info('%s %s %s %s', self._status_code, self.request.method,
-                        self.request.uri, self.request.remote_addr)
+            self.request._finish_time = time.time()
+            app_log.info('%s %s %s %s %.0f ms', self._status_code,
+                    self.request.method, self.request.uri, self.request.remote_addr,
+                    (self.request._finish_time - self.request._start_time) * 1000)
 
 
 class ErrorHandler(RequestHandler):
@@ -222,10 +224,13 @@ class ErrorHandler(RequestHandler):
 
 class Application(object):
     def __init__(self, handlers=None, **settings):
+        # At this point get true start time for request processing
+        start_time = time.time()
         self.handlers = []
         self.settings = settings
         self.log_setting(**settings)
         self.add_handlers(handlers)
+        self.prepare_run_context(StdStream(), start_time)
 
     def log_setting(self, **settings):
         if 'app_log' in settings:
@@ -250,11 +255,11 @@ class Application(object):
                 assert len(spec) in (2, 3)
             self.handlers.append(URLSpec(*spec))
 
-    def _prepare_run(self, stream):
-        connection = HTTPConnection(stream)
+    def prepare_run_context(self, stream, start_time):
+        connection = CGIConnection(stream)
 
         env = os.environ
-        request = HTTPRequest(
+        request = CGIRequest(
             method = env.get("REQUEST_METHOD"),
             uri = env.get("REQUEST_URI"),
             version = env.get('SERVER_PROTOCOL'),
@@ -263,10 +268,11 @@ class Application(object):
             cookie_string = env.get('HTTP_COOKIE'),
             remote_addr = env.get('REMOTE_ADDR'),
             connection = connection,
+            start_time = start_time,
         )
         self._request = request
 
-    def _run(self):
+    def run(self):
         path_args = []
         handler = None
 
@@ -282,7 +288,3 @@ class Application(object):
 
         # TODO: named url pattern using path_kwargs
         handler._execute(*path_args)
-
-    def run(self):
-        self._prepare_run(StdStream())
-        self._run()

@@ -47,10 +47,6 @@ def utf8(value):
     return value.encode("utf-8")
 
 
-# python 2.x support only
-native_str = utf8
-
-
 def format_timestamp(ts):
     """Formats a timestamp in the format used by HTTP.
 
