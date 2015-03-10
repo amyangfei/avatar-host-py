@@ -43,6 +43,14 @@ class Template(TemplateBlock):
         self.render_value_in_context(context)
         return context.render()
 
+    def render_in_sub_context(self, context, meta):
+        """Renders the template in sub context."""
+        sub_params = self._params.copy()
+        sub_params.update(context.params)
+        sub_meta = self._meta.copy()
+        sub_meta.update(meta)
+        self.render_value_in_context(context.sub_context(sub_params, sub_meta))
+
 
 class TemplateError(Exception):
     def __init__(self, message, template_name, template_lineno):
@@ -219,6 +227,13 @@ class Context:
     def render(self):
         return "".join(self.buffer)
 
+    def sub_context(self, params=None, meta=None):
+        sub_params = self.params.copy()
+        sub_params.update(params or {})
+        sub_meta = self.meta.copy()
+        sub_meta.update(meta or {})
+        return Context(sub_params, sub_meta, self.buffer)
+
 
 def _val_evaluate(expression):
     expression = compile(expression, "<string>", "eval")
@@ -345,7 +360,29 @@ def for_macro(parser, name, variable):
     return partial(for_block, name_setter(name), _val_evaluate(variable), block)
 
 
-DEFAULT_MACROS = (if_macro, for_macro, )
+def get_template(context, template):
+    if isinstance(template, Template):
+        return template
+    if isinstance(template, str):
+        loader = context.meta.get("__loader__")
+        if not loader:
+            raise ValueError("Cannot load {} by name.".format(template))
+        return loader.load(template)
+    raise TypeError("Expected a Template or a str, can not be {}."\
+            .format(type(template)))
+
+
+def include_block(evaluate, context):
+    template = get_template(context, evaluate(context))
+    template.render_in_sub_context(context, {})
+
+
+@token_regex_check("^include\s+(.+?)$")
+def include_macro(parser, expression):
+    return partial(include_block, _val_evaluate(expression))
+
+
+DEFAULT_MACROS = (if_macro, for_macro, include_macro, )
 
 
 # Template Loader ##############################################################
@@ -403,6 +440,9 @@ class Loader(object):
         return self._parser.compile(template_str, name, params, default_meta)
 
     def load(self, template_name):
+        """Return the template object if tempate_name is found in any source,
+        else return None.
+        """
         if template_name in self._cache:
             return self._cache[template_name]
         for source in self._sources:
