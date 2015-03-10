@@ -4,7 +4,7 @@
 """ A micro template engine for python2.
 upports expression, template inheritance and extensible macros.
 
-derived from [moody-templates](https://github.com/etianen/moody-templates)
+inspired by [moody-templates](https://github.com/etianen/moody-templates)
 """
 
 import re
@@ -440,7 +440,7 @@ class Loader(object):
         return self._parser.compile(template_str, name, params, default_meta)
 
     def load(self, template_name):
-        """Return the template object if tempate_name is found in any source,
+        """Return the template object if template_name is found in any source,
         else return None.
         """
         if template_name in self._cache:

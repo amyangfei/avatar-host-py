@@ -7,7 +7,10 @@ from typhoon.log import app_log
 
 class MainHandler(BaseHandler):
     def get(self):
-        self.write('hello typhoon cgi-based web framework')
+        template_vars = {
+            "test": "from typhoon cgi-based web framework"
+        }
+        return self.render("index/index.html", **template_vars)
 
 
 class TestHandler(BaseHandler):

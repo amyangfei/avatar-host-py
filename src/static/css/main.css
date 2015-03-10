@@ -1,0 +1,9 @@
+@charset "UTF-8";
+
+body {
+  background: #e3e3e3;
+  background: transparent url("/static/img/background-500-400.png") repeat scroll 0 0;
+  font: 13px Helvetica, arial, freesans, clean, sans-serif;
+  font-family: "Helvetica Neue", "Luxi Sans", "DejaVu Sans", Tahoma, "Hiragino Sans GB", STHeiti !important;
+}
+
