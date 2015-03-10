@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """ A micro template engine for python2.
 upports expression, template inheritance and extensible macros.
 
@@ -19,6 +20,7 @@ class TemplateBlock(object):
         self._name = name
 
     def render_value_in_context(self, context):
+        # segment is a partial object that can render token_contents with context
         for lineno, segment in self.segments:
             try:
                 segment(context)
@@ -55,10 +57,12 @@ class TemplateError(Exception):
 
 
 class TemplateRenderError(TemplateError):
+    # FIXME: <unprintable TemplateRenderError object>
     pass
 
 
 class TemplateCompileError(TemplateError):
+    # FIXME: <unprintable TemplateCompileError object>
     pass
 
 
@@ -215,12 +219,19 @@ class Context:
         self.meta = meta
         self.buffer = buffer
 
+    def debug_dump(self):
+        return 'params: {}, buffer: {}'.format(self.params, self.buffer)
+
     def render(self):
         return "".join(self.buffer)
 
 
 def _val_evaluate(expression):
     expression = compile(expression, "<string>", "eval")
+    """use eval to get the result of the evaluated expression, for example
+    >>> eval('name.upper()',{'name':'cpython'}))
+    CPYTHON
+    """
     def evaluator(context):
         return eval(expression, context.meta, context.params)
     return evaluator
@@ -238,7 +249,43 @@ def _var_segment(evaluate, context):
     context.buffer.append(value)
 
 
+def name_setter(name):
+    """Return a function that will render variable in a context
+    Thr returned function is like set_name(context, value)
+    """
+    # like case: for k, v in dictobj.iteritems():
+    if "," in name:
+        names = [x.strip() for x in name.split(",")]
+        def setter(context, value):
+            value = iter(value)
+            for single_name in names:
+                try:
+                    context.params[single_name] = next(value)
+                except StopIteration:
+                    raise ValueError("not enough values to unpack")
+            try:
+                next(value)
+            except StopIteration:
+                pass
+            else:
+                raise ValueError(
+                        "need more than {} values to unpack".format(len(names)))
+    else:
+        names = [name, ]
+        def setter(context, value):
+            context.params[name] = value
+    return setter
+
+
+
 # Macro Extension ##############################################################
+
+"""
+Each "token_macro" function returns a partial object with the structure of
+function(context), also known as "segment" in our system.
+
+Each "token_block" function is the final rendering function.
+"""
 
 def token_regex_check(regex):
     regex = re.compile(regex, re.DOTALL)
@@ -288,7 +335,23 @@ def if_macro(parser, expression):
             break
     return partial(if_block, clauses, else_block)
 
-DEFAULT_MACROS = (if_macro, )
+
+def for_block(set_name, evaluate, block, context):
+    items = evaluate(context)
+    for item in items:
+        set_name(context, item)
+        block.render_value_in_context(context)
+
+
+RE_ENDFOR = re.compile("^endfor$")
+
+@token_regex_check("^for\s+(.+?)\s+in\s+(.+?)$")
+def for_macro(parser, name, variable):
+    macth, block = parser.parse_block("for", "endfor", RE_ENDFOR)
+    return partial(for_block, name_setter(name), _val_evaluate(variable), block)
+
+
+DEFAULT_MACROS = (if_macro, for_macro, )
 
 
 # Public Interface #############################################################

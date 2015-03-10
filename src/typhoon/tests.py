@@ -44,5 +44,21 @@ class TestRender(unittest.TestCase):
         self.assertRaises(template.TemplateCompileError, lambda: template.compiler("{% if True %}{% else %}{% elif True %}{% endif %}"))
         self.assertRaises(template.TemplateCompileError, lambda: template.compiler("{% if True %}{% else %}{% else %}{% endif %}"))
 
+    def testForMacro(self):
+        # Test basic functionality.
+        template1 = template.compiler("{% for i in range(5) %}{{ i }}{% endfor %}")
+        self.assertEqual(template1.render(), "01234")
+        # Test various syntax errors.
+        self.assertRaises(template.TemplateCompileError, lambda: template.compiler("{% for n in range(0, 3) %}"))
+        # Test variable expansion.
+        template2 = template.compiler("{% for n, m in value %}{{ n }}{{ m }}{% endfor %}")
+        self.assertEqual(template2.render(value=[["foo", "bar"]]), "foobar")
+        self.assertRaises(template.TemplateRenderError, lambda: template2.render(value=[["foo"]]))
+        self.assertRaises(template.TemplateRenderError, lambda: template2.render(value=[["foo", "bar", "foobar"]]))
+        template3 = template.compiler("{% for n in range(2) %}<img src=\"http://img.mxiaonao.me/{{n}}.jpg\" />{% endfor %}")
+        self.assertEqual(template3.render(), "<img src=\"http://img.mxiaonao.me/0.jpg\" /><img src=\"http://img.mxiaonao.me/1.jpg\" />")
+        template4 = template.compiler("{% for n in range(5) %}{% if n > 2 %}{{ n }}{% endif %}{% endfor %}")
+        self.assertEqual(template4.render(), "34")
+
 if __name__ == '__main__':
     unittest.main()
