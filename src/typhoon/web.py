@@ -9,6 +9,7 @@ import httplib
 import numbers
 import datetime
 import traceback
+import urlparse
 
 import typhoon
 from typhoon.log import default_log_setting, app_log
@@ -164,6 +165,15 @@ class RequestHandler(object):
     def flush(self):
         self.request.write(self._gen_resp_header())
         self.request.write("".join(self._write_buffer))
+
+    def redirect(self, url, permanent=False, status=None):
+        if status is None:
+            status = 301 if permanent else 302
+        else:
+            assert isinstance(status, int) and 300 <= status <= 399
+        self.set_status(status)
+        self.set_header("Location", urlparse.urljoin(utf8(self.request.uri),
+                                                     utf8(url)))
 
     def _handle_requeset_exception(self, e):
         if isinstance(e, HTTPError):

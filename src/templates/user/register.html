@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Register | Yagra</title>
+    <link rel="stylesheet" href="/static/css/main.css?t=20150310" />
+</head>
+
+<body>
+
+<div class="">
+    <form class="" action='' method="POST">
+        <fieldset>
+            <div id="legend" class="">注册</div>
+
+            <div>
+                {% for error in errors %}
+                <li>{{ error}}</li>
+                {% endfor %}
+            </div>
+
+            <div>
+                <label class="" for="title">用户名</label>
+                <div>
+                    <input class="" id="username" name="username" placeholder="" type="text" value="" />
+                </div>
+            </div>
+
+            <div>
+                <label class="" for="title">E-mail</label>
+                <div>
+                    <input class="" id="email" name="email" placeholder="" type="text" value="" />
+                </div>
+            </div>
+
+            <div class="">
+                <label class="" for="title">密码</label>
+                <div class="">
+                    <input class="" id="password" name="password" placeholder="" type="password" value="" />
+                </div>
+            </div>
+
+            <div class="">
+                <label class="" for="title">确认密码</label>
+                <div class="">
+                    <input class="" id="password_confirm" name="password_confirm" placeholder="" type="password" value="" />
+                </div>
+            </div>
+
+            <div class="">
+                <label class="" for="title"></label>
+                <div class="">
+                    <button class="">注册</button>
+                </div>
+            </div>
+
+        </fieldset>
+    </form>
+</div>
+
+</body>
+</html>

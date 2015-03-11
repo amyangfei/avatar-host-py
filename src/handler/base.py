@@ -20,5 +20,6 @@ class BaseHandler(RequestHandler):
         return self.write(html)
 
     def render_string(self, template_name, **template_vars):
+        template_vars.setdefault("errors", [])
         template_vars["request"] = self.request
         return self.template_loader.render(template_name, **template_vars)
