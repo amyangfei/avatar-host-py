@@ -6,7 +6,7 @@ cgitb.enable()
 
 import os
 
-from urls import handlers
+from common.urls import handlers
 from typhoon.web import Application
 
 
