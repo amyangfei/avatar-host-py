@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from common.session import Session, SessionManager, MySQLStore
 from typhoon.web import RequestHandler
 from typhoon.template import Loader, DirectorySource, default_parser
 
@@ -23,3 +24,18 @@ class BaseHandler(RequestHandler):
         template_vars.setdefault("errors", [])
         template_vars["request"] = self.request
         return self.template_loader.render(template_name, **template_vars)
+
+    def get_login_url(self):
+        return "/user/login"
+
+
+"""As our program only runs one time when a cgi request comes, we dont't need to
+keep a resident session manager. We only create session manager if we needed as
+creating and destroying a db connection is quite excessive.
+"""
+def get_session(request_handler):
+    data_store = MySQLStore()
+    session_manager = SessionManager(
+            request_handler.application.settings.get('secure_key'), data_store,
+            request_handler.application.settings.get('session_timeout'))
+    return Session(session_manager, request_handler)

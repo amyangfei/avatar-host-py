@@ -26,14 +26,15 @@ class UserModel(BaseModel):
         return self.db.update(sql_string)
 
     def get_user_by_email(self, email):
-        base_string = """SELECT username, email, password, salt, created
+        base_string = """SELECT uid, username, email, password, salt, created
                     FROM yagra.yagra_user where email = '{0}'
                     """
         sql_string = base_string.format(email)
         raw = self.db.query_one(sql_string)
         if raw:
-            username, email, password, salt, created = raw
+            uid, username, email, password, salt, created = raw
             return dict(
+                uid = uid,
                 username = username,
                 email = email,
                 password = password,

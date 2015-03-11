@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from base import BaseHandler
+from base import BaseHandler, get_session
 from common.utils import generate_salt, password_hash
 from form.user import RegisterForm
 from model.user import UserModel
@@ -64,4 +64,9 @@ class RegisterHandler(BaseHandler):
 
     def do_login(self, user):
         app_log.debug("user login email=%s", user.get("email"))
-        pass
+        self.session = get_session(self)
+        self.session["uid"] = user["uid"]
+        self.session["username"] = user["username"]
+        self.session["email"] = user["email"]
+        self.session.save()
+        # self.set_cookie("session_id", self.session.session_id)

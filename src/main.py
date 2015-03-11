@@ -20,6 +20,8 @@ def main():
         },
         'template_path': os.path.join(os.path.dirname(__file__), "templates"),
         'static_path': os.path.join(os.path.dirname(__file__), "static"),
+        'secure_key': "A0j*fCdxi#&vn5Ly",
+        'session_timeout': 86400 * 15,
     }
     app = Application(handlers, **settings)
     app.run()

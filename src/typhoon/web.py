@@ -10,6 +10,8 @@ import numbers
 import datetime
 import traceback
 import urlparse
+import Cookie
+from functools import wraps
 
 import typhoon
 from typhoon.log import default_log_setting, app_log
@@ -137,6 +139,57 @@ class RequestHandler(object):
                 raise MissingArgumentError(name)
             return default
         return args[-1]
+
+    @property
+    def cookies(self):
+        return self.request.cookies
+
+    def get_cookie(self, name, default=None):
+        """Gets the value of the cookie with the given name, else default."""
+        if self.request.cookies is not None and name in self.request.cookies:
+            return self.request.cookies[name].value
+        return default
+
+    def set_cookie(self, name, value, domain=None, expires=None, path="/",
+                   expires_days=None, **kwargs):
+        name = utf8(name)
+        value = utf8(value)
+        if re.search(r"[\x00-\x20]", name + value):
+            # Don't let us accidentally inject bad stuff
+            raise ValueError("Invalid cookie %r: %r" % (name, value))
+        if not hasattr(self, "_new_cookie"):
+            self._new_cookie = Cookie.SimpleCookie()
+        if name in self._new_cookie:
+            del self._new_cookie[name]
+        self._new_cookie[name] = value
+
+        """morsel:https://docs.python.org/2/library/cookie.html#morsel-objects"""
+        morsel = self._new_cookie[name]
+        if domain:
+            morsel["domain"] = domain
+        if expires_days is not None and not expires:
+            expires = datetime.datetime.utcnow() + datetime.timedelta(
+                days=expires_days)
+        if expires:
+            morsel["expires"] = format_timestamp(expires)
+        if path:
+            morsel["path"] = path
+        for k, v in kwargs.items():
+            if k == 'max_age':
+                k = 'max-age'
+            if k in ['httponly', 'secure'] and not v:
+                continue
+
+            morsel[k] = v
+
+    def clear_cookie(self, name, path="/", domain=None):
+        expires = datetime.datetime.utcnow() - datetime.timedelta(days=366)
+        self.set_cookie(name, value="", path=path, expires=expires,
+                        domain=domain)
+
+    def clear_all_cookies(self, path="/", domain=None):
+        for name in self.request.cookies:
+            self.clear_cookie(name, path=path, domain=domain)
 
     def prepare(self):
         pass
@@ -298,3 +351,17 @@ class Application(object):
 
         # TODO: named url pattern using path_kwargs
         handler._execute(*path_args)
+
+
+def authenticated(method):
+    """Decorate methods with this to require that the user be logged in."""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if not self.current_user:
+            if self.request.method in ("GET", "HEAD"):
+                url = self.get_login_url()
+                self.redirect(url)
+                return
+            raise HTTPError(403)
+        return method(self, *args, **kwargs)
+    return wrapper
