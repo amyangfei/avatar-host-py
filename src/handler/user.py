@@ -69,4 +69,4 @@ class RegisterHandler(BaseHandler):
         self.session["username"] = user["username"]
         self.session["email"] = user["email"]
         self.session.save()
-        # self.set_cookie("session_id", self.session.session_id)
+        self.set_secure_cookie("magicid", str(user["uid"]))

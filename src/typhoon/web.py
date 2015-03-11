@@ -5,6 +5,7 @@ import re
 import os
 import sys
 import time
+import base64
 import httplib
 import numbers
 import datetime
@@ -16,7 +17,7 @@ from functools import wraps
 import typhoon
 from typhoon.log import default_log_setting, app_log
 from typhoon.util import (import_object, format_timestamp, unicode_type,
-                        json_encode, utf8, unquote_or_none)
+                        json_encode, utf8, unquote_or_none, create_signature)
 from typhoon.cgiutil import CGIConnection, CGIRequest, HTTPHeaders
 
 
@@ -163,7 +164,10 @@ class RequestHandler(object):
             del self._new_cookie[name]
         self._new_cookie[name] = value
 
-        """morsel:https://docs.python.org/2/library/cookie.html#morsel-objects"""
+        """morsel: https://docs.python.org/2/library/cookie.html#morsel-objects
+        if morsel is not set, there will be some troubles, such as the default
+        path for cookie is the current path.
+        """
         morsel = self._new_cookie[name]
         if domain:
             morsel["domain"] = domain
@@ -190,6 +194,57 @@ class RequestHandler(object):
     def clear_all_cookies(self, path="/", domain=None):
         for name in self.request.cookies:
             self.clear_cookie(name, path=path, domain=domain)
+
+    def set_secure_cookie(self, name, value, **params):
+        expires_days = \
+            self.application.settings.get("session_timeout", 86400 * 15) / 86400
+        encrypted_cookie = self.encrypt_cookie(name, value)
+        self.set_cookie(
+                name, encrypted_cookie, expires_days=expires_days, **params)
+
+    def get_secure_cookie(self, name):
+        encrypt_data = self.get_cookie(name)
+        return self.decrypt_cookie(name, encrypt_data)
+
+    def encrypt_cookie(self, name, value):
+        timestamp = utf8(str(int(time.time())))
+        value = base64.b64encode(utf8(value))
+        secure_key = self.application.settings.get("secure_key")
+        signature = create_signature(secure_key, name, value, timestamp)
+        value = b"|".join([value, timestamp, signature])
+        return value
+
+    def decrypt_cookie(self, name, encrypted_data):
+        parts = utf8(encrypted_data).split(b"|")
+        if len(parts) != 3:
+            return None
+        secure_key = self.application.settings.get("secure_key")
+        signature = create_signature(secure_key, name, parts[0], parts[1])
+        if signature != parts[2]:
+            app_log.warn("Invalid cookie signature %r", encrypted_data)
+            return None
+        session_timeout = self.application.settings.get("session_timeout")
+        if parts[1] > time.time() + session_timeout:
+            app_log.warn("Expired cookie %r", encrypted_data)
+            return None
+        try:
+            return base64.b64decode(parts[0])
+        except Exception:
+            return None
+
+    @property
+    def current_user(self):
+        if not hasattr(self, "_current_user"):
+            self._current_user = self.get_current_user()
+        return self._current_user
+
+    @current_user.setter
+    def current_user(self, value):
+        self._current_user = value
+
+    def get_current_user(self):
+        """Override to determine the current user from, e.g., a cookie."""
+        return None
 
     def prepare(self):
         pass

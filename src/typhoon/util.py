@@ -9,6 +9,8 @@ import numbers
 import calendar
 import json
 import urllib
+import hmac
+import hashlib
 
 
 def import_object(name):
@@ -103,6 +105,7 @@ def url_unescape(value, encoding='utf-8', plus=True):
     else:
         return unicode_type(unquote(utf8(value)), encoding)
 
+
 def unquote_or_none(s):
     """None-safe wrapper around url_unescape to handle unamteched optional
     groups correctly.
@@ -113,3 +116,10 @@ def unquote_or_none(s):
     if s is None:
         return s
     return url_unescape(s, encoding=None, plus=False)
+
+
+def create_signature(secret, *parts):
+    hashval = hmac.new(utf8(secret), digestmod=hashlib.sha1)
+    for part in parts:
+        hashval.update(utf8(part))
+    return utf8(hashval.hexdigest())

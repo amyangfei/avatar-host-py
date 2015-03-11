@@ -28,6 +28,9 @@ class BaseHandler(RequestHandler):
     def get_login_url(self):
         return "/user/login"
 
+    def get_current_user(self):
+        pass
+
 
 """As our program only runs one time when a cgi request comes, we dont't need to
 keep a resident session manager. We only create session manager if we needed as
