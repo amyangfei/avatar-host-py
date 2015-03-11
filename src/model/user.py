@@ -19,7 +19,25 @@ class UserModel(BaseModel):
         # TODO: security detection, such as SQL injection
         base_string = """INSERT INTO yagra.yagra_user
                     (username, email, password, salt, created)
-                    VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')"""
+                    VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')
+                    """
         sql_string = base_string.format(username, email, password, salt,
                 time.strftime('%Y-%m-%d %H:%M:%S'))
         return self.db.update(sql_string)
+
+    def get_user_by_email(self, email):
+        base_string = """SELECT username, email, password, salt, created
+                    FROM yagra.yagra_user where email = '{0}'
+                    """
+        sql_string = base_string.format(email)
+        raw = self.db.query_one(sql_string)
+        if raw:
+            username, email, password, salt, created = raw
+            return dict(
+                username = username,
+                email = email,
+                password = password,
+                salt = salt,
+                created = created,
+            )
+        return raw

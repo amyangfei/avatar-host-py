@@ -11,4 +11,5 @@ handlers = [
     # user
     (r"/user/login", handler.user.LoginHandler),
     (r"/user/register", handler.user.RegisterHandler),
+    (r"/user/logout", handler.user.LogoutHandler),
 ]

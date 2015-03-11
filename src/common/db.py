@@ -41,6 +41,13 @@ class DB():
         cursor.close()
         return data
 
+    def query_one(self, sql_string):
+        cursor = self.conn.cursor()
+        cursor.execute(sql_string)
+        data = cursor.fetchone()
+        cursor.close()
+        return data
+
     def update(self, sql_string):
         cursor = self.conn.cursor()
         result = cursor.execute(sql_string)

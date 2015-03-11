@@ -3,7 +3,7 @@
 
 import re
 
-RE_USERNAME = re.compile("^[a-zA-Z][a-zA-Z0-9_]{2, 19}$")
+RE_USERNAME = re.compile("^[a-zA-Z][a-zA-Z0-9_]{2,19}$")
 
 # not quite complete enough, doesn't support hello@bla-bla.com etc.
 RE_EMAIL = re.compile(r"^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$")

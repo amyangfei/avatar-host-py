@@ -6,6 +6,8 @@ from common.utils import generate_salt, password_hash
 from form.user import RegisterForm
 from model.user import UserModel
 
+from typhoon.log import app_log
+
 
 class LoginHandler(BaseHandler):
     def get(self, **template_vars):
@@ -13,6 +15,17 @@ class LoginHandler(BaseHandler):
 
     def post(self, **template_vars):
         pass
+
+
+class LogoutHandler(BaseHandler):
+    def do_logout(self):
+        # TODO: destroy sessions
+        # TODO: destroy cookies
+        pass
+
+    def get(self):
+        self.do_logout()
+        self.redirect(self.get_argument("next"), "/")
 
 
 class RegisterHandler(BaseHandler):
@@ -26,7 +39,6 @@ class RegisterHandler(BaseHandler):
         form = RegisterForm(self)
         if not form.validate():
             errors = form.errors
-            # error handling
             return self.render("user/register.html", errors=errors)
 
         username = form.get("username")
@@ -40,12 +52,16 @@ class RegisterHandler(BaseHandler):
         create_result = user_model.create_user(username=username, email=email,
                 password=secure_password, salt=salt)
 
-        from typhoon.log import app_log
-        app_log.info("create_result: %d", create_result)
-
-        """
         if create_result == 1:
-            do_login(self, uid)
-        """
+            app_log.info("new user registered successfully email=%s", email)
+            user = user_model.get_user_by_email(email)
+            if user:
+                self.do_login(user)
+            else:
+                app_log.error("Failed to retrive user, email=%s", email)
 
         self.redirect("/")
+
+    def do_login(self, user):
+        app_log.debug("user login email=%s", user.get("email"))
+        pass
