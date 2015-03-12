@@ -26,6 +26,7 @@ class BaseHandler(RequestHandler):
 
     def render_string(self, template_name, **template_vars):
         template_vars.setdefault("errors", [])
+        template_vars.setdefault("notify", [])
         template_vars["request"] = self.request
         template_vars["current_user"] = self.current_user
         return self.template_loader.render(template_name, **template_vars)

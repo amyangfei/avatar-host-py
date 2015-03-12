@@ -3,6 +3,7 @@
 
 import handler.index
 import handler.user
+import handler.image
 
 handlers = [
     (r"/", handler.index.MainHandler),
@@ -12,4 +13,7 @@ handlers = [
     (r"/user/login", handler.user.LoginHandler),
     (r"/user/register", handler.user.RegisterHandler),
     (r"/user/logout", handler.user.LogoutHandler),
+
+    # image
+    (r"/image/upload", handler.image.UploadHandler),
 ]

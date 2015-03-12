@@ -89,5 +89,3 @@ class RegisterHandler(BaseHandler):
                 app_log.error("Failed to retrive user, email=%s", email)
 
         self.redirect("/")
-
-

@@ -8,6 +8,7 @@
         <ul class="">
         {% if current_user %}
             <li><a href="#">{{ current_user.username }}</a></li>
+            <li><a href="/image/upload">上传图片</a></li>
             <li><a href="/user/logout">登出</a></li>
         {% else %}
             <li><a href="/user/login">登录</a></li>

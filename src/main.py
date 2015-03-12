@@ -23,6 +23,8 @@ def main():
         'secure_key': "A0j*fCdxi#&vn5Ly",
         'session_timeout': 86400 * 15,
     }
+    # TODO: Load more config from config file
+    settings['upload_path'] = '/var/www/yagra/upload'
     app = Application(handlers, **settings)
     app.run()
 

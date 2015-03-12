@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Image | Yagra</title>
+    <link rel="stylesheet" href="/static/css/main.css?t=20150310" />
+</head>
+
+<body>
+    {% include 'index/nav.html' %}
+    <div style="text-align:center">
+        <div>
+            {% for error in errors %}
+            <li>{{ error}}</li>
+            {% endfor %}
+        </div>
+        <div>
+            {% for notice in notify %}
+            <li>{{ notice }}</li>
+            {% endfor %}
+        </div>
+
+        <form action="" enctype="multipart/form-data" method="post">
+            <input type="file" name="upload" accept="image/*">
+            <input type="submit" value="上传">
+        </form>
+    </div>
+</body>
+</html>
