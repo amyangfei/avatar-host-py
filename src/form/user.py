@@ -3,6 +3,8 @@
 
 import re
 
+from model.user import UserModel
+
 RE_USERNAME = re.compile("^[a-zA-Z][a-zA-Z0-9_]{2,19}$")
 
 # not quite complete enough, doesn't support hello@bla-bla.com etc.
@@ -70,5 +72,14 @@ class RegisterForm(BaseForm):
         self.fields["username"] = username
         self.fields["email"] = email
         self.fields["password"] = password
+
+        # validations above don't require to connect to DB, so we check them first.
+        if len(self.errors) > 0:
+            return False
+
+        # check the uniqueness of email
+        user_model = UserModel()
+        if user_model.get_user_by_email(email):
+            self.errors.append("该邮箱已经被使用！")
 
         return False if len(self.errors) > 0 else True

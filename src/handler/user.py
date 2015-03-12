@@ -29,9 +29,6 @@ class LogoutHandler(BaseHandler):
 
 
 class RegisterHandler(BaseHandler):
-    def form_validate(self):
-        pass
-
     def get(self, **template_vars):
         self.render("user/register.html", **template_vars)
 
