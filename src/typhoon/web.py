@@ -204,7 +204,6 @@ class RequestHandler(object):
 
     def get_secure_cookie(self, name):
         encrypt_data = self.get_cookie(name)
-        app_log.debug("cookie name=%s, value=%s", name, str(encrypt_data))
         return self.decrypt_cookie(name, encrypt_data)
 
     def encrypt_cookie(self, name, value):

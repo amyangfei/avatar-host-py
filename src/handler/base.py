@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from common.session import Session, SessionManager, MySQLStore
-from model.user import UserModel
+from model.user import UserDAO
 from typhoon.web import RequestHandler
 from typhoon.template import Loader, DirectorySource, default_parser
 
@@ -34,8 +34,8 @@ class BaseHandler(RequestHandler):
         uid = self.get_secure_cookie("magic_id")
         if not uid:
             return None
-        user_model = UserModel()
-        return user_model.get_user_by_uid(uid)
+        user_dao = UserDAO()
+        return user_dao.get_user_by_uid(uid)
 
 
 """As our program only runs one time when a cgi request comes, we dont't need to

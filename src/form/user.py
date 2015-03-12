@@ -3,7 +3,7 @@
 
 import re
 
-from model.user import UserModel
+from model.user import UserDAO
 
 RE_USERNAME = re.compile("^[a-zA-Z][a-zA-Z0-9_]{2,19}$")
 
@@ -78,8 +78,8 @@ class RegisterForm(BaseForm):
             return False
 
         # check the uniqueness of email
-        user_model = UserModel()
-        if user_model.get_user_by_email(email):
+        user_dao = UserDAO()
+        if user_dao.get_user_by_email(email):
             self.errors.append("该邮箱已经被使用！")
 
         return False if len(self.errors) > 0 else True

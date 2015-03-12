@@ -4,7 +4,7 @@
 from base import BaseHandler, get_session
 from common.utils import generate_salt, password_hash
 from form.user import RegisterForm
-from model.user import UserModel
+from model.user import UserDAO
 
 from typhoon.log import app_log
 
@@ -45,13 +45,13 @@ class RegisterHandler(BaseHandler):
         salt = generate_salt(16)
         secure_password = password_hash(password, salt)
 
-        user_model = UserModel()
-        create_result = user_model.create_user(username=username, email=email,
+        user_dao = UserDAO()
+        create_result = user_dao.create_user(username=username, email=email,
                 password=secure_password, salt=salt)
 
         if create_result == 1:
             app_log.info("new user registered successfully email=%s", email)
-            user = user_model.get_user_by_email(email)
+            user = user_dao.get_user_by_email(email)
             if user:
                 self.do_login(user)
             else:
@@ -60,10 +60,10 @@ class RegisterHandler(BaseHandler):
         self.redirect("/")
 
     def do_login(self, user):
-        app_log.debug("user login email=%s", user.get("email"))
+        app_log.debug("user login email=%s", user.email)
         self.session = get_session(self)
-        self.session["uid"] = user["uid"]
-        self.session["username"] = user["username"]
-        self.session["email"] = user["email"]
+        self.session["uid"] = user.uid
+        self.session["username"] = user.username
+        self.session["email"] = user.email
         self.session.save()
-        self.set_secure_cookie("magic_id", str(user["uid"]))
+        self.set_secure_cookie("magic_id", str(user.uid))

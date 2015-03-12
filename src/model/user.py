@@ -6,15 +6,26 @@ import time
 from common.db import DB
 
 
-class BaseModel(object):
+class BaseDAO(object):
     def __init__(self):
-        super(BaseModel, self).__init__()
+        super(BaseDAO, self).__init__()
         # TODO: read db params from config file
         self.db = DB(host='localhost', port=3306, user='yagra',
                 password='yagra', dbname='yagra')
 
 
-class UserModel(BaseModel):
+class UserModel(object):
+    def __init__(self, uid, username, email, created, password, salt, avatar):
+        self.uid = uid
+        self.username = username
+        self.email = email
+        self.created = created
+        self.password = password
+        self.salt = salt
+        self.avatar = avatar
+
+
+class UserDAO(BaseDAO):
     def create_user(self, username, email, password, salt):
         # TODO: security detection, such as SQL injection
         base_string = """INSERT INTO yagra.yagra_user
@@ -26,20 +37,22 @@ class UserModel(BaseModel):
         return self.db.update(sql_string)
 
     def get_user_by_one_unique_filed(self, field_name, field_value):
-        base_string = """SELECT uid, username, email, password, salt, created
+        base_string = """SELECT uid, username, email, password,
+                    salt, created, avatar
                     FROM yagra.yagra_user where {0} = '{1}'
                     """
         sql_string = base_string.format(field_name, field_value)
         raw = self.db.query_one(sql_string)
         if raw:
-            uid, username, email, password, salt, created = raw
-            return dict(
+            uid, username, email, password, salt, created, avatar = raw
+            return UserModel(
                 uid = uid,
                 username = username,
                 email = email,
                 password = password,
                 salt = salt,
                 created = created,
+                avatar = avatar,
             )
         return raw
 
