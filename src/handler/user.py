@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from base import BaseHandler, get_session
+from base import BaseHandler, get_session, prepare_session
 from common.utils import generate_salt, password_hash
 from form.user import RegisterForm
 from model.user import UserDAO
@@ -19,13 +19,13 @@ class LoginHandler(BaseHandler):
 
 class LogoutHandler(BaseHandler):
     def do_logout(self):
-        # TODO: destroy sessions
-        # TODO: destroy cookies
-        pass
+        self.session.clear()
+        self.clear_all_cookies()
 
+    @prepare_session
     def get(self):
         self.do_logout()
-        self.redirect(self.get_argument("next"), "/")
+        self.redirect(self.get_argument("next", "/"))
 
 
 class RegisterHandler(BaseHandler):

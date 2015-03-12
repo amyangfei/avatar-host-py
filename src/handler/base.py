@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from functools import wraps
+
 from common.session import Session, SessionManager, MySQLStore
 from model.user import UserDAO
 from typhoon.web import RequestHandler
 from typhoon.template import Loader, DirectorySource, default_parser
+from common.db import DB
 
 
 class BaseHandler(RequestHandler):
@@ -43,8 +46,20 @@ keep a resident session manager. We only create session manager if we needed as
 creating and destroying a db connection is quite excessive.
 """
 def get_session(request_handler):
-    data_store = MySQLStore()
+    db = DB(host='localhost', port=3306, user='yagra', password='yagra',
+            dbname='yagra')
+    data_store = MySQLStore(db)
     session_manager = SessionManager(
             request_handler.application.settings.get('secure_key'), data_store,
             request_handler.application.settings.get('session_timeout'))
     return Session(session_manager, request_handler)
+
+
+def prepare_session(method):
+    """Decorate methods with this when we use session in the method."""
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        assert isinstance(self, RequestHandler)
+        self.session = get_session(self)
+        return method(self, *args, **kwargs)
+    return wrapper

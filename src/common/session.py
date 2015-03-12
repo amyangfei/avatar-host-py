@@ -8,8 +8,6 @@ import uuid
 import hmac
 import base64
 
-from db import DB
-
 
 class SessionBase(dict):
     def __init__(self, session_id, hmac_key):
@@ -28,6 +26,9 @@ class Session(SessionBase):
         self.session_id = current_session.session_id
         self.hmac_key = current_session.hmac_key
 
+    def clear(self):
+        return self.session_manager.clear(self)
+
     def save(self):
         self.session_manager.set(self.request_handler, self)
 
@@ -40,19 +41,30 @@ class SessionManager(object):
 
     def _fetch_from_store(self, session_id):
         try:
+            existed = True
             is_expired = False
-            expire_date, raw_data = self.client.get_session_data(session_id)
+
+            raw_data = self.client.get_session_data(session_id)
+            if raw_data is None:
+                existed = False
+                return existed, is_expired, {}
+
+            expire_date, session_data = raw_data
             # session has been expired
             if expire_date < datetime.datetime.now():
                 is_expired = True
-                return is_expired, {}
-            if raw_data != None:
+                return existed, is_expired, {}
+
+            if session_data != None:
                 # refresh session exprire_date
-                self.client.setex(session_id, self.session_timeout, raw_data)
-                session_data_dict = self.unserialize(raw_data)
-            return is_expired, session_data_dict
+                self.client.setex(session_id, self.session_timeout, session_data)
+                session_data_dict = self.unserialize(session_data)
+            return existed, is_expired, session_data_dict
+
         except IndexError:
-            return is_expired, {}
+            # FIXME: should keep this try catch?
+            # happens when session_data is brokern in data store
+            return existed, is_expired, {}
 
     def serialize(self, session):
         pickle_data = pickle.dumps(dict(session.items()), pickle.HIGHEST_PROTOCOL)
@@ -71,8 +83,9 @@ class SessionManager(object):
             if check_hmac_key == hmac_key:
                 session = SessionBase(session_id, hmac_key)
                 # Retrive and repickle session data from DataStore
-                is_expired, session_data = self._fetch_from_store(session_id)
-                if not is_expired:
+                existed, is_expired, session_data = \
+                    self._fetch_from_store(session_id)
+                if existed and not is_expired:
                     for k, v in session_data.iteritems():
                         session[k] = v
                 else:
@@ -86,6 +99,9 @@ class SessionManager(object):
             session = SessionBase(session_id, hmac_key)
 
         return session
+
+    def clear(self, session):
+        return self.client.delete_session(session.session_id)
 
     def set(self, request_handler, session):
         request_handler.set_cookie("session_id", session.session_id)
@@ -102,8 +118,8 @@ class SessionManager(object):
 
 
 class MySQLStore(object):
-    def __init__(self, table_name="yagra.yagra_sessions"):
-        self.db = DB()
+    def __init__(self, db, table_name="yagra.yagra_sessions"):
+        self.db = db
         self.table_name = table_name
 
     def get_session_data(self, session_id):
@@ -112,6 +128,11 @@ class MySQLStore(object):
         sql_string = base_string.format(self.table_name, session_id)
 
         return self.db.query_one(sql_string)
+
+    def delete_session(self, session_id):
+        base_string = """DELETE FROM {0} where session_id = '{1}'"""
+        sql_string = base_string.format(self.table_name, session_id)
+        return self.db.update(sql_string)
 
     def setex(self, session_id, timeout, raw_data):
         base_string = """INSERT INTO {0} (session_id, expire_date, session_data)
