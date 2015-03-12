@@ -227,7 +227,11 @@ class RequestHandler(object):
             app_log.warn("Invalid cookie signature %r", encrypted_data)
             return None
         session_timeout = self.application.settings.get("session_timeout")
-        if int(parts[1]) > time.time() + session_timeout:
+        try:
+            timestamp = int(parts[1])
+        except ValueError:
+            timestamp = 0
+        if timestamp < time.time() - session_timeout:
             app_log.warn("Expired cookie %r", encrypted_data)
             return None
         try:
