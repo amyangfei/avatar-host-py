@@ -36,7 +36,8 @@ class UploadHandler(BaseHandler):
 
         # if user has upload this image before, we don't keep more copy.
         md5_checksum = hashlib.md5(upload_file.file.read()).hexdigest()
-        image = ImageDAO().get_image_by_uid_and_md5(user.uid, md5_checksum)
+        image_dao = ImageDAO(self.get_db_config())
+        image = image_dao.get_image_by_uid_and_md5(user.uid, md5_checksum)
         if image:
             return self.get(notify=["您已经上传过此图片"])
 
@@ -44,7 +45,7 @@ class UploadHandler(BaseHandler):
             upload_file.file.seek(0)
             img_writer.write(upload_file.file.read())
 
-        create_result = ImageDAO().create_image(user_id=user.uid,
+        create_result = image_dao.create_image(user_id=user.uid,
                 filename=image_name, md5_checksum=md5_checksum)
         if create_result == 1:
             return self.get(notify=["上传图片成功"])

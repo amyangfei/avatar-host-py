@@ -38,8 +38,11 @@ class BaseHandler(RequestHandler):
         uid = self.get_secure_cookie("magic_id")
         if not uid:
             return None
-        user_dao = UserDAO()
+        user_dao = UserDAO(self.get_db_config())
         return user_dao.get_user_by_uid(uid)
+
+    def get_db_config(self):
+        return self.application.settings.get("db")
 
 
 """As our program only runs one time when a cgi request comes, we dont't need to
@@ -47,8 +50,14 @@ keep a resident session manager. We only create session manager if we needed as
 creating and destroying a db connection is quite excessive.
 """
 def get_session(request_handler):
-    db = DB(host='localhost', port=3306, user='yagra', password='yagra',
-            dbname='yagra')
+    db_config = request_handler.get_db_config()
+    db = DB(
+        host = db_config["host"],
+        port = db_config["port"],
+        user = db_config["user"],
+        password = db_config["password"],
+        dbname = db_config["dbname"],
+    )
     data_store = MySQLStore(db)
     session_manager = SessionManager(
             request_handler.application.settings.get('secure_key'), data_store,

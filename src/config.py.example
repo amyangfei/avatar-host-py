@@ -1,0 +1,17 @@
+user_defined_config = {
+    "app_log": {
+        "redirect_path": "/var/log/yagra/app.log",
+        "log_level": "DEBUG",
+        "log_format_str": "%(asctime)s [%(levelname)s] %(pathname)s:%(lineno)s %(message)s",
+    },
+    "secure_key": "A0j*fCdxi#&vn5Ly",
+    "session_timeout": 86400 * 15,
+    "upload_path": "/var/www/yagra/upload",
+    "db": {
+        "host": "localhost",
+        "port": 3306,
+        "user": "yagra",
+        "password": "yagra",
+        "dbname": "yagra",
+    }
+}

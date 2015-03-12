@@ -32,7 +32,7 @@ class LoginHandler(BaseHandler):
         email = form.get("email")
         password = form.get("password")
 
-        user_dao = UserDAO()
+        user_dao = UserDAO(self.get_db_config())
         user_info = user_dao.get_user_by_email(email)
 
         if user_info is None:
@@ -76,7 +76,7 @@ class RegisterHandler(BaseHandler):
         salt = generate_salt(16)
         secure_password = password_hash(password, salt)
 
-        user_dao = UserDAO()
+        user_dao = UserDAO(self.get_db_config())
         create_result = user_dao.create_user(username=username, email=email,
                 password=secure_password, salt=salt)
 
