@@ -34,11 +34,15 @@ class UploadHandler(BaseHandler):
         image_fullpath = get_image_fullpath(
                 self.application.settings.get("upload_path"), image_name)
 
+        # if user has upload this image before, we don't keep more copy.
+        md5_checksum = hashlib.md5(upload_file.file.read()).hexdigest()
+        image = ImageDAO().get_image_by_uid_and_md5(user.uid, md5_checksum)
+        if image:
+            return self.get(notify=["您已经上传过此图片"])
+
         with open(image_fullpath, "wb") as img_writer:
-            img_writer.write(upload_file.file.read())
-            # calculate the md5 checksum of image, so move file cursor
             upload_file.file.seek(0)
-            md5_checksum = hashlib.md5(upload_file.file.read()).hexdigest()
+            img_writer.write(upload_file.file.read())
 
         create_result = ImageDAO().create_image(user_id=user.uid,
                 filename=image_name, md5_checksum=md5_checksum)

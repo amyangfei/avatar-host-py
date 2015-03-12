@@ -84,7 +84,7 @@ class RegisterHandler(BaseHandler):
             app_log.info("new user registered successfully email=%s", email)
             user = user_dao.get_user_by_email(email)
             if user:
-                do_login(user)
+                do_login(self, user)
             else:
                 app_log.error("Failed to retrive user, email=%s", email)
 
