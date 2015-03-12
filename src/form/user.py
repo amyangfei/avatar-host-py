@@ -83,3 +83,20 @@ class RegisterForm(BaseForm):
             self.errors.append("该邮箱已经被使用！")
 
         return False if len(self.errors) > 0 else True
+
+
+class LoginForm(BaseForm):
+    def validate(self):
+        email = self.get_argument("email")
+        if email is None:
+            self.errors.append("必须填写您的 email 地址")
+
+        password = self.get_argument("password")
+        if password is None:
+            self.errors.append("请填写密码")
+
+        self.validated = True
+        self.fields["email"] = email
+        self.fields["password"] = password
+
+        return False if len(self.errors) > 0 else True
