@@ -1,0 +1,18 @@
+<div class="" role="navigation">
+    <div class=""><a class="" href="/">Yagra Go</a></div>
+    <div id="navbar" class="">
+        <ul class="">
+            <li><a href="/">Home</a></li>
+            <li><a href="#about">About</a></li>
+        </ul>
+        <ul class="">
+        {% if current_user %}
+            <li><a href="#">{{ current_user.get('username') }}</a></li>
+            <li><a href="/user/logout">登出</a></li>
+        {% else %}
+            <li><a href="/user/login">登录</a></li>
+            <li><a href="/user/register">注册</a></li>
+        {% endif %}
+        </ul>
+    </div>
+</div>

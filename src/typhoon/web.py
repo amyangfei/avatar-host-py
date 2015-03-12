@@ -204,6 +204,7 @@ class RequestHandler(object):
 
     def get_secure_cookie(self, name):
         encrypt_data = self.get_cookie(name)
+        app_log.debug("cookie name=%s, value=%s", name, str(encrypt_data))
         return self.decrypt_cookie(name, encrypt_data)
 
     def encrypt_cookie(self, name, value):
@@ -215,6 +216,8 @@ class RequestHandler(object):
         return value
 
     def decrypt_cookie(self, name, encrypted_data):
+        if not encrypted_data:
+            return None
         parts = utf8(encrypted_data).split(b"|")
         if len(parts) != 3:
             return None
@@ -224,7 +227,7 @@ class RequestHandler(object):
             app_log.warn("Invalid cookie signature %r", encrypted_data)
             return None
         session_timeout = self.application.settings.get("session_timeout")
-        if parts[1] > time.time() + session_timeout:
+        if int(parts[1]) > time.time() + session_timeout:
             app_log.warn("Expired cookie %r", encrypted_data)
             return None
         try:
@@ -375,15 +378,16 @@ class Application(object):
 
     def prepare_run_context(self, stream, start_time):
         connection = CGIConnection(stream)
-
         env = os.environ
+        headers = {
+            "Cookie": env.get("HTTP_COOKIE"),
+        }
         request = CGIRequest(
             method = env.get("REQUEST_METHOD"),
             uri = env.get("REQUEST_URI"),
             version = env.get('SERVER_PROTOCOL'),
-            headers = {},
+            headers = headers,
             host = env.get("HTTP_HOST"),
-            cookie_string = env.get('HTTP_COOKIE'),
             remote_addr = env.get('REMOTE_ADDR'),
             connection = connection,
             start_time = start_time,

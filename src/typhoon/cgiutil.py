@@ -3,7 +3,6 @@
 
 import cgi
 import time
-import copy
 import Cookie
 from urlparse import parse_qs
 
@@ -24,8 +23,8 @@ class CGIConnection(object):
 
 class CGIRequest(object):
     def __init__(self, method=None, uri=None, version=None, headers=None,
-                 body=None, host=None, cookie_string=None, remote_addr=None,
-                 connection=None, start_time=None
+                 body=None, host=None, remote_addr=None, connection=None,
+                 start_time=None
                  ):
         self.method = method
         self.uri = uri
@@ -33,7 +32,6 @@ class CGIRequest(object):
         self.headers = headers
 
         self.host = host or self.headers.get("Host") or "127.0.0.1"
-        self.cookie_string =  cookie_string
         self.remote_addr = remote_addr
         self.connection = connection
         self._start_time = start_time or time.time()

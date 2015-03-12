@@ -55,7 +55,7 @@ class Template(TemplateBlock):
 class TemplateError(Exception):
     def __init__(self, message, template_name, template_lineno):
         super(TemplateError, self).__init__(message)
-        self.tempate_name = template_name
+        self.template_name = template_name
         self.template_lineno = template_lineno
 
     def __str__(self):

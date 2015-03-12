@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from common.session import Session, SessionManager, MySQLStore
+from model.user import UserModel
 from typhoon.web import RequestHandler
 from typhoon.template import Loader, DirectorySource, default_parser
 
@@ -23,13 +24,18 @@ class BaseHandler(RequestHandler):
     def render_string(self, template_name, **template_vars):
         template_vars.setdefault("errors", [])
         template_vars["request"] = self.request
+        template_vars["current_user"] = self.current_user
         return self.template_loader.render(template_name, **template_vars)
 
     def get_login_url(self):
         return "/user/login"
 
     def get_current_user(self):
-        pass
+        uid = self.get_secure_cookie("magic_id")
+        if not uid:
+            return None
+        user_model = UserModel()
+        return user_model.get_user_by_uid(uid)
 
 
 """As our program only runs one time when a cgi request comes, we dont't need to
