@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import hashlib
 
 from model.base import BaseDAO
 
@@ -15,6 +16,10 @@ class UserModel(object):
         self.password = password
         self.salt = salt
         self.avatar = avatar
+
+    def get_avatar_url(self):
+        email_md5 = hashlib.md5(self.email).hexdigest()
+        return "/image/" + email_md5
 
 
 class UserDAO(BaseDAO):

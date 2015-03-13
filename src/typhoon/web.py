@@ -119,6 +119,8 @@ class RequestHandler(object):
         else:
             raise TypeError("Unsupported header value %r" % value)
 
+    # TODO: head support
+
     def get(self, *args, **kwargs):
         raise HTTPError(405)
 

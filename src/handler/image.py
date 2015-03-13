@@ -3,6 +3,7 @@
 
 import os
 import hashlib
+import mimetypes
 
 from typhoon.log import app_log
 from typhoon.web import authenticated
@@ -14,6 +15,11 @@ from model.image import ImageDAO
 def get_image_fullpath(basepath, filename):
     """future work, extensible image storage"""
     return os.path.join(basepath, filename)
+
+
+def get_upload_image_fullpath(request_handler, filename):
+    basepath = request_handler.application.settings.get("upload_path")
+    return get_image_fullpath(basepath, filename)
 
 
 class UploadHandler(BaseHandler):
@@ -32,8 +38,7 @@ class UploadHandler(BaseHandler):
 
         _, ext = os.path.splitext(upload_file.filename)
         image_name = random_image_name(user.username) + ext
-        image_fullpath = get_image_fullpath(
-                self.application.settings.get("upload_path"), image_name)
+        image_fullpath = get_upload_image_fullpath(self, image_name)
 
         # if user has upload this image before, we don't keep more copy.
         md5_checksum = hashlib.md5(upload_file.file.read()).hexdigest()
@@ -63,8 +68,20 @@ class UploadHandler(BaseHandler):
 
 class AccessHandler(BaseHandler):
     def get(self, email_md5, **template_vars):
-        app_log.debug("email_md5: %s", email_md5)
-        pass
+        image_dao = ImageDAO(self.get_db_config())
+        image = image_dao.get_image_by_emailmd5(email_md5)
+        if image:
+            image_fullpath = get_upload_image_fullpath(self, image.filename)
+        else:
+            image_fullpath = get_image_fullpath("static/img", "default.png")
+
+        with open(image_fullpath, "rb") as f:
+            img = f.read()
+            self.write(img)
+            self.set_header("Content-Length", len(img))
+        _, ext = os.path.splitext(image_fullpath)
+        mimetype = mimetypes.types_map.get(ext, "image/jpeg")
+        self.set_header("Content-Type", mimetype)
 
 
 class ManageHandler(BaseHandler):
@@ -78,5 +95,3 @@ class ManageHandler(BaseHandler):
         own_images = image_dao.get_own_images(user.uid, 0, 3)
         template_vars.update({"images": own_images})
         return self.render("image/manage.html", **template_vars)
-
-

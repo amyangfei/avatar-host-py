@@ -46,14 +46,23 @@ class ImageDAO(BaseDAO):
         raw = self.db.query_one(sql_string)
         if raw:
             imgid, user_id, filename, created, md5, email_md5 = raw
-            return ImageModel (
-                imgid = imgid,
-                user_id = user_id,
-                filename = filename,
-                created = created,
-                md5 = md5,
-                email_md5 = email_md5,
-            )
+            imgid, user_id, filename, created, md5, email_md5 = raw
+            return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
+                    created=created, md5=md5, email_md5=email_md5,)
+        return None
+
+    def get_image_by_emailmd5(self, email_md5):
+        base_string = """
+                SELECT imgid, user_id, filename, created, md5, email_md5
+                FROM yagra.yagra_image
+                where email_md5 = '{0}'
+                """
+        sql_string = base_string.format(email_md5)
+        raw = self.db.query_one(sql_string)
+        if raw:
+            imgid, user_id, filename, created, md5, email_md5 = raw
+            return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
+                    created=created, md5=md5, email_md5=email_md5,)
         return None
 
     def get_own_images(self, user_id, offset=0, limit=10):
@@ -70,12 +79,8 @@ class ImageDAO(BaseDAO):
         if raw:
             for row in raw:
                 imgid, user_id, filename, created, md5, email_md5 = row
-                images.append(ImageModel(
-                    imgid = imgid,
-                    user_id = user_id,
-                    filename = filename,
-                    created = created,
-                    md5 = md5,
-                    email_md5 = email_md5,
-                ))
+                images.append(ImageModel(imgid=imgid, user_id=user_id,
+                    filename=filename, created=created, md5=md5,
+                    email_md5=email_md5,)
+                )
         return images
