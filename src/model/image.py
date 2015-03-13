@@ -110,7 +110,7 @@ class ImageDAO(BaseDAO):
     def get_own_images(self, user_id, offset=0, limit=10):
         base_string = """
                 SELECT imgid, user_id, filename, created, email_md5, md5
-                FROM yagra_image WHERE imgid >=
+                FROM yagra_image WHERE user_id={0} and imgid >=
                     (SELECT imgid FROM yagra_image
                     WHERE user_id={0} ORDER BY imgid LIMIT {1}, 1)
                 LIMIT {2}
