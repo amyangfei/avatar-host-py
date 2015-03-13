@@ -8,7 +8,7 @@ import mimetypes
 from typhoon.log import app_log
 from typhoon.web import authenticated
 from base import BaseHandler, prepare_session
-from common.utils import random_image_name
+from common.utils import random_image_name, paginator
 from model.image import ImageDAO
 
 
@@ -89,9 +89,25 @@ class ManageHandler(BaseHandler):
     def get(self, **template_vars):
         if self.current_user is None:
             return self.redirect("/user/login?next=" + self.request.uri)
+
         user = self.current_user
         image_dao = ImageDAO(self.get_db_config())
-        # TODO: pagination
-        own_images = image_dao.get_own_images(user.uid, 0, 3)
-        template_vars.update({"images": own_images})
+
+        # simple pagination
+        own_images_count = image_dao.get_own_image_count(user.uid)
+        limit = 3
+        try:
+            page_count = (own_images_count + limit - 1) / limit
+            page = int(self.get_argument("page", "1"))
+            if page_count != 0 and page > page_count:
+                page = page_count
+        except ValueError:
+            page = 1
+        offset = (page - 1) * limit
+        own_images = image_dao.get_own_images(user.uid, offset, limit)
+
+        paginations = paginator(page, own_images_count, limit)
+        template_vars.update(paginations)
+        template_vars.update({"images": own_images, "count": own_images_count})
+
         return self.render("image/manage.html", **template_vars)

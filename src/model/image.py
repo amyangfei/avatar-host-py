@@ -65,6 +65,13 @@ class ImageDAO(BaseDAO):
                     created=created, md5=md5, email_md5=email_md5,)
         return None
 
+    def get_own_image_count(self, user_id):
+        base_string = """SELECT COUNT(*) FROM yagra.yagra_image
+                WHERE user_id = {0}"""
+        sql_string = base_string.format(user_id)
+        raw = self.db.query_one(sql_string)
+        return 0 if raw is None else raw[0]
+
     def get_own_images(self, user_id, offset=0, limit=10):
         base_string = """
                 SELECT imgid, user_id, filename, created, email_md5, md5
