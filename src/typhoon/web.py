@@ -11,13 +11,15 @@ import numbers
 import datetime
 import traceback
 import urlparse
+import binascii
 import Cookie
 from functools import wraps
 
 import typhoon
 from typhoon.log import default_log_setting, app_log
 from typhoon.util import (import_object, format_timestamp, unicode_type,
-                        json_encode, utf8, unquote_or_none, create_signature)
+                        json_encode, utf8, unquote_or_none, create_signature,
+                        xhtml_escape, digest_equals)
 from typhoon.cgiutil import CGIConnection, CGIRequest, HTTPHeaders
 
 
@@ -76,6 +78,7 @@ class RequestHandler(object):
 
         self.application = application
         self.request = request
+        self._check_xsrf_cookie = application.settings.get("check_xsrf_cookie")
 
         self.clear()
         self.initialize(**kwargs)
@@ -241,6 +244,61 @@ class RequestHandler(object):
             return None
 
     @property
+    def xsrf_token(self):
+        if not hasattr(self, "_xsrf_token"):
+            version, token, timestamp = self._get_raw_xsrf_token()
+            self._xsrf_token = b"|".join([
+                    b"2",
+                    binascii.b2a_hex(token),
+                    str(int(timestamp)),
+                ]
+            )
+
+            if version is None:
+                expires_days = 30 if self.current_user else None
+                self.set_cookie("_xsrf", self._xsrf_token,
+                                expires_days=expires_days)
+        return self._xsrf_token
+
+    def _get_raw_xsrf_token(self):
+        if not hasattr(self, "_raw_xsrf_token"):
+            cookie = self.get_cookie("_xsrf")
+            if cookie:
+                version, token, timestamp = self._decode_xsrf_token(cookie)
+            else:
+                version, token, timestamp = None, None, None
+            if token is None:
+                version = None
+                token = os.urandom(16)
+                timestamp = time.time()
+            self._raw_xsrf_token = (version, token, timestamp)
+        return self._raw_xsrf_token
+
+    def _decode_xsrf_token(self, cookie_string):
+        try:
+            _, token, timestamp = cookie_string.split("|")
+            version = 2
+            token = binascii.a2b_hex(utf8(token))
+            timestamp = int(timestamp)
+            return version, token, timestamp
+        except Exception:
+            return None, None, None
+
+    def check_xsrf_cookie(self):
+        token = self.get_argument("_xsrf", None)
+        if not token:
+            raise HTTPError(403, "'_xsrf' argument misssing from POST")
+
+        _, token, _ = self._decode_xsrf_token(token)
+        _, expected_token, _ = self._get_raw_xsrf_token()
+
+        if not digest_equals(utf8(token), utf8(expected_token)):
+            raise HTTPError(403, "'_xsrf' cookie doesn't match")
+
+    def escaped_xsrf(self):
+        return xhtml_escape(self.xsrf_token)
+
+    @property
     def current_user(self):
         if not hasattr(self, "_current_user"):
             self._current_user = self.get_current_user()
@@ -294,7 +352,6 @@ class RequestHandler(object):
     def _handle_requeset_exception(self, e):
         if isinstance(e, HTTPError):
             if e.status_code not in httplib.responses and not e.reason:
-                # TODO: log error("Bad HTTP status code: %d", e.status_code)
                 self.send_error(500, exc_info=sys.exc_info())
             else:
                 self.send_error(e.status_code, exc_info=sys.exc_info())
@@ -318,18 +375,23 @@ class RequestHandler(object):
         self.set_status(status_code, reason=reason)
         try:
             self.write_error(status_code, **kwargs)
-        except Exception:
-            # TODO: log exception
-            pass
+        except Exception, e:
+            app_log.error("write error failed %s", e)
 
     def _execute(self, *args):
         try:
+            if self.request.method not in ("GET", "HEAD") and \
+                    self.application.settings.get("check_xsrf_cookie") and \
+                    self._check_xsrf_cookie:
+                self.check_xsrf_cookie()
+
             self.prepare()
             getattr(self, self.request.method.lower())(*args)
         except Exception, e:
             self._handle_requeset_exception(e)
         finally:
             self.flush()
+
             self.request._finish_time = time.time()
             app_log.info('%s %s %s %s %.0f ms', self._status_code,
                     self.request.method, self.request.uri, self.request.remote_addr,
@@ -343,9 +405,6 @@ class ErrorHandler(RequestHandler):
 
     def prepare(self):
         raise HTTPError(self._status_code)
-
-    def check_xsrf_cookie(self):
-        pass
 
 
 class Application(object):

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import time
+
 from base import BaseHandler, get_session, prepare_session
 from common.utils import generate_salt, password_hash
 from form.user import RegisterForm, LoginForm
 from model.user import UserDAO
-
 from typhoon.log import app_log
 
 
@@ -15,6 +16,7 @@ def do_login(request_handler, user):
     request_handler.session["uid"] = user.uid
     request_handler.session["username"] = user.username
     request_handler.session["email"] = user.email
+    request_handler.session["timestamp"] = str(time.time())
     request_handler.session.save()
     request_handler.set_secure_cookie("magic_id", str(user.uid))
 

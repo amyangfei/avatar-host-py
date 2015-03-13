@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import re
 import time
 import email.utils
 import datetime
@@ -123,3 +124,30 @@ def create_signature(secret, *parts):
     for part in parts:
         hashval.update(utf8(part))
     return utf8(hashval.hexdigest())
+
+
+_XHTML_ESCAPE_RE = re.compile('[&<>"\']')
+_XHTML_ESCAPE_DICT = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+                      '\'': '&#39;'}
+
+
+def to_basestring(value):
+    if isinstance(value, (basestring, type(None))):
+        return value
+    if not isinstance(value, bytes):
+        raise TypeError("expected bytes, unicode, or None; got %r" % type(value))
+    return value.decode("utf-8")
+
+
+def xhtml_escape(value):
+    return _XHTML_ESCAPE_RE.sub(lambda match: _XHTML_ESCAPE_DICT[match.group(0)],
+                                to_basestring(value))
+
+
+def digest_equals(a, b):
+    if len(a) != len(b):
+        return False
+    result = 0
+    for x, y in zip(a, b):
+        result |= ord(x) ^ ord(y)
+    return result == 0

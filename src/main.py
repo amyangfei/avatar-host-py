@@ -23,6 +23,7 @@ def main():
         "static_path": os.path.join(os.path.dirname(__file__), "static"),
         "secure_key": "A0j*fCdxi#&vn5Ly",
         "session_timeout": 86400 * 15,
+        "check_xsrf_cookie": True,
     }
     assert isinstance(user_defined_config, dict)
     for k, v in user_defined_config.iteritems():

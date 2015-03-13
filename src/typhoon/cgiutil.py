@@ -55,8 +55,9 @@ class CGIRequest(object):
         for k in form.keys():
             if form[k].file:
                 self.upload_files[k] = form[k]
-            else:
-                self.arguments.setdefault(k, []).extend(form.getlist(k))
+            # here we also set form.getlist(k) to arguments, eg.
+            # form['_xsrf'=.file is True
+            self.arguments.setdefault(k, []).extend(form.getlist(k))
 
     def write(self, chunk):
         self.connection.write(chunk)

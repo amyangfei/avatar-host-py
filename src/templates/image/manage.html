@@ -28,6 +28,9 @@
                 <a href="javascript:;" class="j_set_avatar" rel="{{ image.imgid }}">设为头像</a>
             </li>
             {% endfor %}
+            {% if len(images) > 0 %}
+                <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
+            {% endif %}
 
             {% if page_count > 0 %}
                 {% if show_first %}<a href="?page=1">1</a>{% endif %}

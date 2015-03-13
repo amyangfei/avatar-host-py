@@ -13,5 +13,6 @@ user_defined_config = {
         "user": "yagra",
         "password": "yagra",
         "dbname": "yagra",
-    }
+    },
+    "check_xsrf_cookie": True,
 }
