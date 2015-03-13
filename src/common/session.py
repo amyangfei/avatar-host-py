@@ -118,7 +118,7 @@ class SessionManager(object):
 
 
 class MySQLStore(object):
-    def __init__(self, db, table_name="yagra.yagra_sessions"):
+    def __init__(self, db, table_name="yagra_sessions"):
         self.db = db
         self.table_name = table_name
 

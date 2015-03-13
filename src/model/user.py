@@ -25,7 +25,7 @@ class UserModel(object):
 class UserDAO(BaseDAO):
     def create_user(self, username, email, password, salt):
         # TODO: security detection, such as SQL injection
-        base_string = """INSERT INTO yagra.yagra_user
+        base_string = """INSERT INTO yagra_user
                     (username, email, password, salt, created)
                     VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')
                     """
@@ -36,7 +36,7 @@ class UserDAO(BaseDAO):
     def get_user_by_one_unique_filed(self, field_name, field_value):
         base_string = """SELECT uid, username, email, password,
                     salt, created, avatar
-                    FROM yagra.yagra_user where {0} = '{1}'
+                    FROM yagra_user where {0} = '{1}'
                     """
         sql_string = base_string.format(field_name, field_value)
         raw = self.db.query_one(sql_string)
@@ -60,7 +60,7 @@ class UserDAO(BaseDAO):
         return self.get_user_by_one_unique_filed("uid", uid)
 
     def set_user_avatar(self, uid, avatar_id):
-        base_string = """UPDATE yagra.yagra_user
+        base_string = """UPDATE yagra_user
                     SET avatar = {0} WHERE uid = {1}
                     """
         sql_string = base_string.format(avatar_id, uid)
