@@ -7,11 +7,12 @@ from model.base import BaseDAO
 
 
 class ImageModel(object):
-    def __init__(self, user_id, filename, md5, created):
-        self.user_id = user_id
-        self.filename = filename
-        self.md5 = md5
-        self.created = created
+    def __init__(self, **kwargs):
+        for k, v in kwargs.iteritems():
+            setattr(self, k, v)
+
+    def get_url(self):
+        return "/upload/" + getattr(self, "filename")
 
 
 class ImageDAO(BaseDAO):
@@ -36,18 +37,45 @@ class ImageDAO(BaseDAO):
             return result, lastrowid
 
     def get_image_by_uid_and_md5(self, user_id, md5_checksum):
-        base_string = """SELECT user_id, filename, created, md5
+        base_string = """
+                    SELECT imgid, user_id, filename, created, md5, email_md5
                     FROM yagra.yagra_image
                     WHERE user_id = {0} and md5 = '{1}'
                     """
         sql_string = base_string.format(user_id, md5_checksum)
         raw = self.db.query_one(sql_string)
         if raw:
-            user_id, filename, created, md5 = raw
+            imgid, user_id, filename, created, md5, email_md5 = raw
             return ImageModel (
+                imgid = imgid,
                 user_id = user_id,
                 filename = filename,
                 created = created,
                 md5 = md5,
+                email_md5 = email_md5,
             )
         return None
+
+    def get_own_images(self, user_id, offset=0, limit=10):
+        base_string = """
+                SELECT imgid, user_id, filename, created, email_md5, md5
+                FROM yagra.yagra_image WHERE imgid >=
+                    (SELECT imgid FROM yagra.yagra_image
+                    WHERE user_id={0} ORDER BY imgid LIMIT {1}, 1)
+                LIMIT {2}
+                """
+        sql_string = base_string.format(user_id, offset, limit)
+        raw = self.db.query(sql_string)
+        images = []
+        if raw:
+            for row in raw:
+                imgid, user_id, filename, created, md5, email_md5 = row
+                images.append(ImageModel(
+                    imgid = imgid,
+                    user_id = user_id,
+                    filename = filename,
+                    created = created,
+                    md5 = md5,
+                    email_md5 = email_md5,
+                ))
+        return images

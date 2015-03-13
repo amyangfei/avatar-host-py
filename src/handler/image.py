@@ -65,3 +65,18 @@ class AccessHandler(BaseHandler):
     def get(self, email_md5, **template_vars):
         app_log.debug("email_md5: %s", email_md5)
         pass
+
+
+class ManageHandler(BaseHandler):
+    @prepare_session
+    def get(self, **template_vars):
+        if self.current_user is None:
+            return self.redirect("/user/login?next=" + self.request.uri)
+        user = self.current_user
+        image_dao = ImageDAO(self.get_db_config())
+        # TODO: pagination
+        own_images = image_dao.get_own_images(user.uid, 0, 3)
+        template_vars.update({"images": own_images})
+        return self.render("image/manage.html", **template_vars)
+
+
