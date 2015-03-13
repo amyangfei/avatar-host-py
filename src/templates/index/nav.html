@@ -7,7 +7,7 @@
         </ul>
         <ul class="">
         {% if current_user %}
-            <li><a href="#">{{ current_user.username }}</a></li>
+            <li><a href="#">{{ current_user.username }}</a><img id="nav_avatar" src="{{ current_user.get_avatar_url()}}" width=40 height=40 /></li>
             <li><a href="{{ current_user.get_avatar_url() }}" target="_blank">我的头像链接</a></li>
             <li><a href="/image/upload">上传图片</a></li>
             <li><a href="/image/manage">管理我的图片</a></li>

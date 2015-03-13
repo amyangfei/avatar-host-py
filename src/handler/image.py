@@ -5,7 +5,6 @@ import os
 import hashlib
 import mimetypes
 
-from typhoon.log import app_log
 from typhoon.web import authenticated
 from base import BaseHandler, prepare_session
 from common.utils import random_image_name, paginator
@@ -111,3 +110,28 @@ class ManageHandler(BaseHandler):
         template_vars.update({"images": own_images, "count": own_images_count})
 
         return self.render("image/manage.html", **template_vars)
+
+
+class SetAvatarHandler(BaseHandler):
+    @authenticated
+    @prepare_session
+    def post(self, **template_vars):
+        user = self.current_user
+        image_id = self.get_argument("image_id")
+        image_dao = ImageDAO(self.get_db_config())
+        image  = image_dao.get_image_by_id(image_id)
+
+        if image is None:
+            self.write({"status": "fail", "msg": "图片不存在"})
+            return
+
+        if user.avatar == image.imgid:
+            self.write({"status": "ok", "msg": "这就是您当前的头像，无需更换"})
+            return
+
+        image_dao.update_user_avatar(user.uid, image.imgid,
+                hashlib.md5(user.email).hexdigest())
+
+        new_avatar = image.get_url()
+        self.write({"status": "ok", "msg": "更新头像成功",
+                    "new_avatar": new_avatar})

@@ -23,7 +23,10 @@
         <div>
             您共拥有 {{ count }} 张图片
             {% for image in images %}
-            <li><img src="{{ image.get_url() }}" width=200, height=200></img></li>
+            <li>
+                <img src="{{ image.get_url() }}" width=200, height=200></img>
+                <a href="javascript:;" class="j_set_avatar" rel="{{ image.imgid }}">设为头像</a>
+            </li>
             {% endfor %}
 
             {% if page_count > 0 %}
@@ -37,5 +40,7 @@
             {% endif %}
         </div>
     </div>
+    <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/avatar.js"></script>
 </body>
 </html>

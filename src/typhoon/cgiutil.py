@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
 import cgi
 import time
 import Cookie
@@ -42,6 +43,15 @@ class CGIRequest(object):
         self.upload_files = {}
 
         form = cgi.FieldStorage()
+        """FIXME: post request contentType can't be application/json,
+        maybe a drawback of python cgi library? Some references:
+        https://groups.google.com/forum/#!topic/google-appengine-python/D_Gdp0Svtyg
+        http://stackoverflow.com/questions/17247347/why-do-post-file-uploads-in-gae-not-have-access-to-the-cgi-fieldstorage-methods
+
+        post with application/json as content type has bug as following:
+            if form.keys():
+            raise TypeError, "not indexable"
+        """
         for k in form.keys():
             if form[k].file:
                 self.upload_files[k] = form[k]

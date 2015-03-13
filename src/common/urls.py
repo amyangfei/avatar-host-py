@@ -18,4 +18,5 @@ handlers = [
     (r"/image/upload", handler.image.UploadHandler),
     (r"/image/manage", handler.image.ManageHandler),
     (r"/image/([0-9a-fA-F]{32})", handler.image.AccessHandler),
+    (r"/image/setavatar", handler.image.SetAvatarHandler),
 ]

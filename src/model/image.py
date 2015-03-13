@@ -36,6 +36,42 @@ class ImageDAO(BaseDAO):
             self.db.commit()
             return result, lastrowid
 
+    def update_user_avatar(self, user_id, imgid, email_md5):
+        # set old avatar linked email_md5 to empty string
+        unlink_string = """UPDATE yagra_image SET email_md5 = ''
+                WHERE email_md5 = '{0}'"""
+        sql_string = unlink_string.format(email_md5)
+        self.db.update_without_commit(sql_string)
+
+        # set new avatar linked with email_md5
+        link_string = """UPDATE yagra_image SET email_md5 = '{0}'
+                WHERE imgid = {1}"""
+        sql_string = link_string.format(email_md5, imgid)
+        self.db.update_without_commit(sql_string)
+
+        avatar_string = """UPDATE yagra_user SET avatar = {0}
+                WHERE uid = {1}"""
+        sql_string = avatar_string.format(imgid, user_id)
+        self.db.update_without_commit(sql_string)
+
+        self.db.commit()
+
+
+    def get_image_by_id(self, image_id):
+        base_string = """
+                SELECT imgid, user_id, filename, created, md5, email_md5
+                FROM yagra_image
+                WHERE imgid = {0}
+                """
+        sql_string = base_string.format(image_id)
+        raw = self.db.query_one(sql_string)
+        if raw:
+            imgid, user_id, filename, created, md5, email_md5 = raw
+            return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
+                    created=created, md5=md5, email_md5=email_md5,)
+        return None
+
+
     def get_image_by_uid_and_md5(self, user_id, md5_checksum):
         base_string = """
                     SELECT imgid, user_id, filename, created, md5, email_md5
@@ -45,7 +81,6 @@ class ImageDAO(BaseDAO):
         sql_string = base_string.format(user_id, md5_checksum)
         raw = self.db.query_one(sql_string)
         if raw:
-            imgid, user_id, filename, created, md5, email_md5 = raw
             imgid, user_id, filename, created, md5, email_md5 = raw
             return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
                     created=created, md5=md5, email_md5=email_md5,)
