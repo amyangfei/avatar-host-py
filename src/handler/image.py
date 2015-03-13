@@ -4,6 +4,7 @@
 import os
 import hashlib
 
+from typhoon.log import app_log
 from typhoon.web import authenticated
 from base import BaseHandler, prepare_session
 from common.utils import random_image_name
@@ -45,9 +46,22 @@ class UploadHandler(BaseHandler):
             upload_file.file.seek(0)
             img_writer.write(upload_file.file.read())
 
-        create_result = image_dao.create_image(user_id=user.uid,
-                filename=image_name, md5_checksum=md5_checksum)
+        email_md5 = "" if user.avatar else hashlib.md5(user.email).hexdigest()
+        update_avatar = False if user.avatar else True
+        create_result, lastrowid = image_dao.create_image(user_id=user.uid,
+                filename=image_name, md5_checksum=md5_checksum,
+                email_md5=email_md5, update_avatar=update_avatar)
+
         if create_result == 1:
-            return self.get(notify=["上传图片成功"])
+            notify="上传图片成功"
+            if update_avatar:
+                notify += "，并且设置为默认头像"
+            return self.get(notify=[notify, ])
         else:
             return self.get(errors=["上传图片失败"])
+
+
+class AccessHandler(BaseHandler):
+    def get(self, email_md5, **template_vars):
+        app_log.debug("email_md5: %s", email_md5)
+        pass

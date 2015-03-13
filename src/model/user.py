@@ -53,3 +53,10 @@ class UserDAO(BaseDAO):
 
     def get_user_by_uid(self, uid):
         return self.get_user_by_one_unique_filed("uid", uid)
+
+    def set_user_avatar(self, uid, avatar_id):
+        base_string = """UPDATE yagra.yagra_user
+                    SET avatar = {0} WHERE uid = {1}
+                    """
+        sql_string = base_string.format(avatar_id, uid)
+        return self.db.update(sql_string)

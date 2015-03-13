@@ -15,14 +15,25 @@ class ImageModel(object):
 
 
 class ImageDAO(BaseDAO):
-    def create_image(self, user_id, filename, md5_checksum):
+    # FIXME: access to both yagra_image table and yagra_user table
+    def create_image(self, user_id, filename, md5_checksum, email_md5,
+            update_avatar):
         base_string = """INSERT INTO yagra.yagra_image
-                    (user_id, filename, md5, created)
-                    VALUES ({0}, '{1}', '{2}', '{3}')
+                    (user_id, filename, md5, created, email_md5)
+                    VALUES ({0}, '{1}', '{2}', '{3}', '{4}')
                     """
         sql_string = base_string.format(user_id, filename, md5_checksum,
-                time.strftime('%Y-%m-%d %H:%M:%S'))
-        return self.db.update(sql_string)
+                time.strftime('%Y-%m-%d %H:%M:%S'), email_md5)
+        update_base_string = """UPDATE yagra.yagra_user
+                    SET avatar = {0} where uid = {1}"""
+        if not update_avatar:
+            return self.db.update(sql_string)
+        else:
+            _, lastrowid = self.db.update_without_commit(sql_string)
+            sql_string = update_base_string.format(lastrowid, user_id)
+            result, lastrowid = self.db.update_without_commit(sql_string)
+            self.db.commit()
+            return result, lastrowid
 
     def get_image_by_uid_and_md5(self, user_id, md5_checksum):
         base_string = """SELECT user_id, filename, created, md5

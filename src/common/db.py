@@ -23,6 +23,7 @@ class DB():
         self.dbname = dbname
 
         self.conn = self._get_connection()
+        self._cursor = None
 
     def _get_connection(self):
         return MySQLdb.Connect(
@@ -51,6 +52,18 @@ class DB():
     def update(self, sql_string):
         cursor = self.conn.cursor()
         result = cursor.execute(sql_string)
+        lastrowid = cursor.lastrowid
         self.conn.commit()
         cursor.close()
-        return result
+        return result, lastrowid
+
+    def update_without_commit(self, sql_string):
+        self._cursor = self._cursor or self.conn.cursor()
+        result = self._cursor.execute(sql_string)
+        lastrowid = self._cursor.lastrowid
+        return result, lastrowid
+
+    def commit(self):
+        self.conn.commit()
+        self._cursor.close()
+        self._cursor = None

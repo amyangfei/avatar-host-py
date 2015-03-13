@@ -77,7 +77,7 @@ class RegisterHandler(BaseHandler):
         secure_password = password_hash(password, salt)
 
         user_dao = UserDAO(self.get_db_config())
-        create_result = user_dao.create_user(username=username, email=email,
+        create_result, _ = user_dao.create_user(username=username, email=email,
                 password=secure_password, salt=salt)
 
         if create_result == 1:
