@@ -8,7 +8,7 @@ user_defined_config = {
     "session_timeout": 86400 * 15,
     "upload_path": "/var/www/yagra/upload",
     "db": {
-        "host": "localhost",
+        "host": "yagra-mysql",
         "port": 3306,
         "user": "yagra",
         "password": "yagra",
