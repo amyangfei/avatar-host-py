@@ -13,7 +13,6 @@ FROM debian:wheezy
 # upgrade & install required packages
 RUN apt-get update
 RUN apt-get install -y git apache2 python python-dev libmysqlclient-dev python-pip
-RUN pip install mysql-python
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
@@ -36,6 +35,7 @@ WORKDIR \${TMPDIR}/avatar-host-py/deploy
 RUN pip install -r requirements.txt
 
 # copy application code and configuration
+WORKDIR \${TMPDIR}
 RUN cp -r avatar-host-py/src/* \${WEBBASE}
 WORKDIR \${WEBBASE}
 RUN cp config.py.example config.py

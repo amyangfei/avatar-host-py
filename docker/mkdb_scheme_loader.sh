@@ -14,7 +14,7 @@ FROM debian:wheezy
 
 # upgrade & install required packages
 RUN apt-get update
-RUN apt-get install -y mysql-client
+RUN apt-get install -y mysql-client netcat
 
 WORKDIR /root
 ADD ./deploy/yagra_scheme.sql /root/yagra_scheme.sql
