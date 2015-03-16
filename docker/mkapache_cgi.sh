@@ -27,12 +27,20 @@ ENV UPLOAD /var/www/yagra/upload
 
 RUN mkdir -p \${TMPDIR} \${WEBBASE} \${APPLOG} \${UPLOAD}
 
+# clone code base
 WORKDIR \${TMPDIR}
 RUN git clone https://github.com/amyangfei/avatar-host-py
+
+# install python requirements
+WORKDIR \${TMPDIR}/avatar-host-py/deploy
+RUN pip install -r requirements.txt
+
+# copy application code and configuration
 RUN cp -r avatar-host-py/src/* \${WEBBASE}
 WORKDIR \${WEBBASE}
 RUN cp config.py.example config.py
 
+# apache configuration
 ADD ./conf/apache_yagra.conf \${APACHE_CONF_DIR}/sites-available/yagra.conf
 RUN ln -s \${APACHE_CONF_DIR}/sites-available/yagra.conf \${APACHE_CONF_DIR}/sites-enabled/yagra.conf
 
