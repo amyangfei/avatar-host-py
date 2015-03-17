@@ -21,6 +21,11 @@ build_images() {
 }
 
 
+# TODO: use docker volume for log, upload images and db data storage.
+# But still have unsolved problem as non-root user can't write to shared.
+# Some references: https://github.com/boot2docker/boot2docker/issues/581
+# https://github.com/docker/docker/issues/7198
+# https://github.com/docker/docker/issues/3124
 start_containers() {
     sudo docker run --name "yagra-mysql" -h "yagra-mysql" -d -p 3006:3306 \
         -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=yagra \
