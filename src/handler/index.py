@@ -8,7 +8,8 @@ from typhoon.log import app_log
 class MainHandler(BaseHandler):
     def get(self):
         template_vars = {
-            "test": "from typhoon cgi-based web framework"
+            "test": "from typhoon cgi-based web framework",
+            "active_page": "home",
         }
         return self.render("index/index.html", **template_vars)
 

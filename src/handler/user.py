@@ -23,6 +23,9 @@ def do_login(request_handler, user):
 
 class LoginHandler(BaseHandler):
     def get(self, **template_vars):
+        template_vars.update({
+            "active_page": "home",
+        })
         self.render("user/login.html", **template_vars)
 
     def post(self, **template_vars):
@@ -63,6 +66,9 @@ class LogoutHandler(BaseHandler):
 
 class RegisterHandler(BaseHandler):
     def get(self, **template_vars):
+        template_vars.update({
+            "active_page": "home",
+        })
         self.render("user/register.html", **template_vars)
 
     def post(self, **template_vars):

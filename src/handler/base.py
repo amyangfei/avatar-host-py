@@ -30,6 +30,7 @@ class BaseHandler(RequestHandler):
         template_vars["request"] = self.request
         template_vars["current_user"] = self.current_user
         template_vars["escaped_xsrf"] = self.escaped_xsrf
+        template_vars.setdefault("active_page", "home")
         return self.template_loader.render(template_name, **template_vars)
 
     def get_login_url(self):

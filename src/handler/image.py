@@ -129,6 +129,7 @@ class ManageHandler(BaseHandler):
         paginations = paginator(page, own_images_count, limit)
         template_vars.update(paginations)
         template_vars.update({"images": own_images, "count": own_images_count})
+        template_vars.update({"active_page": "manage"})
 
         return self.render("image/manage.html", **template_vars)
 
