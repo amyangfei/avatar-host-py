@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
 import hashlib
 import mimetypes
 
+from typhoon.log import app_log
 from typhoon.web import authenticated
+from typhoon.util import format_timestamp
 from base import BaseHandler, prepare_session
 from common.utils import random_image_name, paginator
 from model.image import ImageDAO
@@ -74,13 +77,31 @@ class AccessHandler(BaseHandler):
         else:
             image_fullpath = get_image_fullpath("static/img", "default.png")
 
-        with open(image_fullpath, "rb") as f:
+        try:
+            f = open(image_fullpath, "rb")
             img = f.read()
             self.write(img)
             self.set_header("Content-Length", len(img))
-        _, ext = os.path.splitext(image_fullpath)
-        mimetype = mimetypes.types_map.get(ext, "image/jpeg")
-        self.set_header("Content-Type", mimetype)
+
+            fs = os.stat(image_fullpath)
+            etag = "{0}-{1}-{2}".format(fs.st_ino, int(fs.st_mtime), fs.st_size)
+
+            if etag is None:
+                return self.set_status(500)
+            if self.request.headers.get("If-None-Match") == etag:
+                return self.set_status(304)
+            else:
+                self.set_header("ETag", etag)
+                # "Last-Modified" is not the modified time of file, it's the
+                # timestamp that certain image is set as avatar.
+                self.set_header("Last-Modified", format_timestamp(time.time()))
+
+            _, ext = os.path.splitext(image_fullpath)
+            mimetype = mimetypes.types_map.get(ext, "image/jpeg")
+            self.set_header("Content-Type", mimetype)
+        except IOError, e:
+            app_log.error("file %s not found %s", image_fullpath, e)
+            self.set_status(500)
 
 
 class ManageHandler(BaseHandler):

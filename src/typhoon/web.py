@@ -445,6 +445,8 @@ class Application(object):
         env = os.environ
         headers = {
             "Cookie": env.get("HTTP_COOKIE"),
+            "If-None-Match": env.get("HTTP_IF_NONE_MATCH", ""),
+            "If-Modified-Since": env.get("HTTP_IF_MODIFIED_SINCE", ""),
         }
         request = CGIRequest(
             method = env.get("REQUEST_METHOD"),
