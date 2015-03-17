@@ -3,49 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <title>Login | Yagra</title>
+    <link rel="stylesheet" href="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/css/main.css?t=20150310" />
 </head>
 
 <body>
     {% include 'index/nav.html' %}
-    <div class="">
-        <div>
-            {% for error in errors %}
-            <li>{{ error}}</li>
-            {% endfor %}
-        </div>
-        <form class="" action='' method="POST">
-            <fieldset>
-                <div id="legend" class="">
-                    <legend class="">登录</legend>
-                </div>
+    <div class="container-fluid container mt15">
+        <div class="row">
+            <div class="container-box">
+                <form class="form-horizontal" action='' method="POST">
+                    <fieldset>
+                        <div id="legend" class="mb30">
+                            <legend class="">登录</legend>
+                        </div>
 
-                <div class="">
-                    <label class="" for="title">E-mail</label>
-                    <div class="">
-                        <input class="" id="email" name="email" placeholder="" type="text" value="" />
-                    </div>
-                </div>
+                        <div>
+                            {% for error in errors %}
+                            <li>{{ error}}</li>
+                            {% endfor %}
+                        </div>
 
-                <div class="">
-                    <label class="" for="title">Password</label>
-                    <div class="">
-                        <input class="" id="password" name="password" placeholder="" type="password" value="" />
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label" for="title">E-mail</label>
+                            <div class="col-md-6">
+                                <input class="form-control" id="email" name="email" placeholder="" type="text" value="" />
+                            </div>
+                        </div>
 
-                <div class="">
-                    <label class="" for="title"></label>
-                    <div class="">
-                        <button class="">登录</button>
-                        <a href="/user/register" class="">注册账号</a>
-                        <a href="/user/forgot" class="">忘记密码</a>
-                        <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
-                    </div>
-                </div>
-            </fieldset>
-        </form>
-    </div>
+                        <div class="form-group mt30">
+                            <label class="col-md-2 control-label" for="title">Password</label>
+                            <div class="col-md-6">
+                                <input class="form-control" id="password" name="password" placeholder="" type="password" value="" />
+                            </div>
+                        </div>
 
+                        <div class="form-group mt30">
+                            <label class="col-md-2 control-label" for="title"></label>
+                            <!-- Button -->
+                            <div class="col-md-6">
+                                <button class="btn btn-success btn-sm">登录</button>
+                                <a href="/user/register" class="ml10 mr10 btn btn-default btn-sm">注册账号</a>
+                                <a href="#" class="btn btn-default btn-sm">忘记密码</a>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
+                </form>
+            </div><!--container-box-->
+        </div><!--row-->
+    </div><!--container-->
+
+    <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
 </body>
 </html>

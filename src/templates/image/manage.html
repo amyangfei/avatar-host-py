@@ -2,48 +2,60 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Upload Image | Yagra</title>
+    <title>管理您的图片 | Yagra</title>
+    <link rel="stylesheet" href="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/css/main.css?t=20150310" />
 </head>
 
 <body>
     {% include 'index/nav.html' %}
-    <div style="text-align:center">
-        <div>
-            {% for error in errors %}
-            <li>{{ error}}</li>
-            {% endfor %}
-        </div>
-        <div>
-            {% for notice in notify %}
-            <li>{{ notice }}</li>
-            {% endfor %}
-        </div>
 
-        <div>
-            您共拥有 {{ count }} 张图片
-            {% for image in images %}
-            <li>
-                <img src="{{ image.get_url() }}" width=200, height=200></img>
-                <a href="javascript:;" class="j_set_avatar" rel="{{ image.imgid }}">设为头像</a>
-            </li>
-            {% endfor %}
-            {% if len(images) > 0 %}
-                <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
-            {% endif %}
+    <div class="container-fluid container mt15">
+        <div class="row">
+            <div class="container-box">
+                <div>
+                    {% for error in errors %}
+                    <li>{{ error}}</li>
+                    {% endfor %}
+                </div>
+                <div>
+                    {% for notice in notify %}
+                    <li>{{ notice }}</li>
+                    {% endfor %}
+                </div>
 
-            {% if page_count > 0 %}
-                {% if show_first %}<a href="?page=1">1</a>{% endif %}
-                {% if show_first and previous_page != 2 %}...{% endif %}
-                {% if has_previous %}<a href="?page={{ previous_page }}">{{ previous_page }}</a>{% endif %}
-                <a href="?page={{ current_page }}">{{ current_page }}</a>
-                {% if has_next %}<a href="?page={{ next_page }}">{{ next_page }}</a>{% endif %}
-                {% if show_last and next_page != page_count - 1 %}...{% endif %}
-                {% if show_last %}<a href="?page={{ page_count }}">{{ page_count }}</a>{% endif %}
-            {% endif %}
-        </div>
-    </div>
+                <div>
+                    <div id="legend" class="mb30">
+                        <legend class="">您目前拥有 {{ count }} 张图片</legend>
+                    </div>
+
+                    {% for image in images %}
+                    <li>
+                        <img src="{{ image.get_url() }}" width=200, height=200></img>
+                        <a href="javascript:;" class="j_set_avatar" rel="{{ image.imgid }}">设为头像</a>
+                    </li>
+                    {% endfor %}
+                    {% if len(images) > 0 %}
+                        <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
+                    {% endif %}
+
+                    {% if page_count > 0 %}
+                        {% if show_first %}<a href="?page=1">1</a>{% endif %}
+                        {% if show_first and previous_page != 2 %}...{% endif %}
+                        {% if has_previous %}<a href="?page={{ previous_page }}">{{ previous_page }}</a>{% endif %}
+                        <a href="?page={{ current_page }}">{{ current_page }}</a>
+                        {% if has_next %}<a href="?page={{ next_page }}">{{ next_page }}</a>{% endif %}
+                        {% if show_last and next_page != page_count - 1 %}...{% endif %}
+                        {% if show_last %}<a href="?page={{ page_count }}">{{ page_count }}</a>{% endif %}
+                    {% endif %}
+                </div>
+
+            </div><!--container-box-->
+        </div><!--row-->
+    </div><!--container-->
+
     <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="/static/js/avatar.js"></script>
 </body>
 </html>
