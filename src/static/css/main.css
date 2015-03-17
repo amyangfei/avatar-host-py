@@ -264,3 +264,22 @@ body {
     width: 25px;
     height: 25px;
 }
+
+.sidebar-img {
+    width: 180px;
+    height: 180px;
+}
+
+.wall-img {
+    width: 180px;
+    height: 180px;
+}
+
+.wall-li {
+    list-style-type: none;
+}
+
+.nav-img-a {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}

@@ -17,16 +17,23 @@
                     <legend class="">上传图片</legend>
                 </div>
 
-                <div>
+                {% if errors %}
+                <div class="alert alert-error fade in">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     {% for error in errors %}
                     <li>{{ error}}</li>
                     {% endfor %}
                 </div>
-                <div>
+                {% endif %}
+
+                {% if notify %}
+                <div class="alert alert-success fade in">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                     {% for notice in notify %}
                     <li>{{ notice }}</li>
                     {% endfor %}
                 </div>
+                {% endif %}
 
                 <div class="mt30">
                     <form action="" enctype="multipart/form-data" method="post">

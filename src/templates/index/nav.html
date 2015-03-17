@@ -21,7 +21,8 @@
             <ul class="nav navbar-nav navbar-right">
             {% if current_user %}
                 <li><a href="javascript:;">{{ current_user.username }}</a></li>
-                <li><a href="javascript:;"><img id="nav_avatar" class="img-circle nav-img" src="{{ current_user.get_avatar_url()}}" /></a></li>
+                <!--<li><a href="javascript:;"><img id="nav_avatar" class="img-circle nav-img" src="{{ current_user.get_avatar_url()}}" /></a></li>-->
+                <li><a class="navbar-brand" href="javascript:;"><img id="nav_avatar" class="img-circle nav-img" src="{{ current_user.get_avatar_url()}}" /></a></li>
                 <li><a href="{{ current_user.get_avatar_url() }}" target="_blank">我的头像链接</a></li>
                 <li><a href="/image/upload">上传图片</a></li>
                 <li><a href="/image/manage">管理我的图片</a></li>
