@@ -18,8 +18,10 @@
         <p class="mt20">该站点提供了类似 <a href="http://gravatar.com" target="_blank">Gravatar.com</a> 的avatar hosting 服务</p>
         <p>您可以上传、管理图片，并可以通过系统提供的 API 访问您的头像</p>
         <p>
+            {% if not current_user %}
             <a class="btn btn-default btn-primary mr5" href="/user/login" role="button">登录</a>
             <a class="btn btn-default btn-primary mr5" href="/user/register" role="button">注册</a>
+            {% endif %}
             <a class="btn btn-default btn-primary" href="/about" role="button">使用帮助</a>
         </p>
       </div>

@@ -30,6 +30,12 @@ class UploadHandler(BaseHandler):
     def get(self, **template_vars):
         if self.current_user is None:
             return self.redirect("/user/login?next=" + self.request.uri)
+
+        image_dao = ImageDAO(self.get_db_config())
+        last_upload_img = image_dao.get_user_last_upload_image(
+                self.current_user.uid)
+        template_vars.update({"last_upload_img": last_upload_img})
+
         return self.render("image/upload.html", **template_vars)
 
     @authenticated

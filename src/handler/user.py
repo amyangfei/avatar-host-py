@@ -34,7 +34,7 @@ class LoginHandler(BaseHandler):
             errors = form.errors
             return self.get(errors=errors)
 
-        email = form.get("email")
+        email = form.get("email").lower()
         password = form.get("password")
 
         user_dao = UserDAO(self.get_db_config())

@@ -126,3 +126,17 @@ class ImageDAO(BaseDAO):
                     email_md5=email_md5,)
                 )
         return images
+
+    def get_user_last_upload_image(self, user_id):
+        base_string = """
+                SELECT imgid, user_id, filename, created, email_md5, md5
+                FROM yagra_image
+                WHERE user_id={0} ORDER BY created DESC LIMIT 1
+                """
+        sql_string = base_string.format(user_id)
+        raw = self.db.query_one(sql_string)
+        if raw:
+            imgid, user_id, filename, created, md5, email_md5 = raw
+            return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
+                    created=created, md5=md5, email_md5=email_md5,)
+        return None

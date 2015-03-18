@@ -19,8 +19,12 @@
                         <legend class="">上传图片</legend>
                     </div>
 
+                    <div class="mt30">
+                        <span>您首次上传的图片会自动设置为头像，以后上传的图片请到图片管理界面设置头像</span>
+                    </div>
+
                     {% if errors %}
-                    <div class="alert alert-danger fade in">
+                    <div class="alert alert-danger fade in mt20">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                         {% for error in errors %}
                         <li>{{ error}}</li>
@@ -29,7 +33,7 @@
                     {% endif %}
 
                     {% if notify %}
-                    <div class="alert alert-success fade in">
+                    <div class="alert alert-success fade in mt20">
                         <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
                         {% for notice in notify %}
                         <li>{{ notice }}</li>
@@ -37,11 +41,16 @@
                     </div>
                     {% endif %}
 
+                    <div id="preview-div" class="mt30 collapse">
+                        <span>图片预览：</span>
+                        <img id="preview-img" style="width: 200px; height: 200px;" src=""/>
+                    </div>
+
                     <div class="mt30">
                         <form action="" enctype="multipart/form-data" method="post">
                             <div class="form-group">
                                 <!-- <label for="exampleInputEmail1">上传</label> -->
-                                <input type="file" name="upload" accept="image/*">
+                                <input id="upload-input" type="file" name="upload" accept="image/*">
                             </div>
                             <button type="submit" class="btn btn-default">上传</button>
                             <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
@@ -53,17 +62,29 @@
             <div class="col-md-3 right">
                 <div class="sidenav container-box">
                     <ul>
-                        <li class=""><a href="javascript:;">{{ current_user.username }}</a></li>
+                        <li class=""><a href="javascript:;">{{ current_user.username }}，您好</a></li>
                         <li class="">您当前的头像</li>
                         <li class="mt5"><img id="" class="sidebar-img" src="{{ current_user.get_avatar_url()}}" /></li>
                     </ul>
                 </div>
             </div>
 
+            {% if last_upload_img %}
+            <div class="col-md-3 right mt20">
+                <div class="sidenav container-box">
+                    <ul>
+                        <li class="">您最近上传的图片</li>
+                        <li class="mt5"><img id="" class="sidebar-img" src="{{ last_upload_img.get_url() }}" /></li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
         </div><!--row-->
     </div><!--container-->
 
     <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/static/js/upload.js"></script>
 </body>
 </html>
