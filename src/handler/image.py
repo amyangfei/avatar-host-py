@@ -10,7 +10,7 @@ from typhoon.log import app_log
 from typhoon.web import authenticated
 from typhoon.util import format_timestamp
 from base import BaseHandler, prepare_session
-from common.utils import random_image_name, paginator
+from common.utils import random_image_name, paginator, get_image_ext
 from model.image import ImageDAO
 
 
@@ -47,20 +47,31 @@ class UploadHandler(BaseHandler):
         if upload_file.filename == "":
             return self.get(errors=["请指定上传的图片"])
 
+        upload_file_data = upload_file.file.read()
+
+        # TODO: better image type validation
+        ext_from_header = get_image_ext(upload_file_data)
+        if ext_from_header not in ["jpeg", "gif", "png"]:
+            return self.get(errors=["非法的文件格式"])
+        """
+        _, ext = os.path.splitext(upload_file.filename)
+        if ext.lower() not in ["jpeg", "jpg", "gif", "png"]:
+            return self.get(errors=["非法的文件格式"])
+        """
+
         _, ext = os.path.splitext(upload_file.filename)
         image_name = random_image_name(user.username) + ext
         image_fullpath = get_upload_image_fullpath(self, image_name)
 
         # if user has upload this image before, we don't keep more copy.
-        md5_checksum = hashlib.md5(upload_file.file.read()).hexdigest()
+        md5_checksum = hashlib.md5(upload_file_data).hexdigest()
         image_dao = ImageDAO(self.get_db_config())
         image = image_dao.get_image_by_uid_and_md5(user.uid, md5_checksum)
         if image:
             return self.get(notify=["您已经上传过此图片"])
 
         with open(image_fullpath, "wb") as img_writer:
-            upload_file.file.seek(0)
-            img_writer.write(upload_file.file.read())
+            img_writer.write(upload_file_data)
 
         email_md5 = "" if user.avatar else hashlib.md5(user.email).hexdigest()
         update_avatar = False if user.avatar else True
