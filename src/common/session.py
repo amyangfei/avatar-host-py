@@ -10,12 +10,14 @@ import base64
 
 
 class SessionBase(dict):
+
     def __init__(self, session_id, hmac_key):
         self.session_id = session_id
         self.hmac_key = hmac_key
 
 
 class Session(SessionBase):
+
     def __init__(self, session_manager, request_handler):
         self.session_manager = session_manager
         self.request_handler = request_handler
@@ -34,6 +36,7 @@ class Session(SessionBase):
 
 
 class SessionManager(object):
+
     def __init__(self, secret, datastore_client, session_timeout):
         self.secret = secret
         self.client = datastore_client
@@ -55,9 +58,12 @@ class SessionManager(object):
                 is_expired = True
                 return existed, is_expired, {}
 
-            if session_data != None:
+            if session_data is not None:
                 # refresh session exprire_date
-                self.client.setex(session_id, self.session_timeout, session_data)
+                self.client.setex(
+                    session_id,
+                    self.session_timeout,
+                    session_data)
                 session_data_dict = self.unserialize(session_data)
             return existed, is_expired, session_data_dict
 
@@ -67,7 +73,10 @@ class SessionManager(object):
             return existed, is_expired, {}
 
     def serialize(self, session):
-        pickle_data = pickle.dumps(dict(session.items()), pickle.HIGHEST_PROTOCOL)
+        pickle_data = pickle.dumps(
+            dict(
+                session.items()),
+            pickle.HIGHEST_PROTOCOL)
         return base64.encodestring(pickle_data)
 
     def unserialize(self, session_data):
@@ -78,7 +87,7 @@ class SessionManager(object):
         session_id = request_handler.get_cookie("session_id")
         hmac_key = request_handler.get_cookie("hmac_key")
 
-        if session_id != None:
+        if session_id is not None:
             check_hmac_key = self._calculate_hmac(session_id)
             if check_hmac_key == hmac_key:
                 session = SessionBase(session_id, hmac_key)
@@ -92,8 +101,9 @@ class SessionManager(object):
                     session_id = None
             else:
                 session_id = None
-        # session_id is None or hmac_key validation failed, return a fresh session
-        if session_id == None:
+        # session_id is None or hmac_key validation failed, return a fresh
+        # session
+        if session_id is None:
             session_id = self._generate_session_id()
             hmac_key = self._calculate_hmac(session_id)
             session = SessionBase(session_id, hmac_key)
@@ -108,7 +118,7 @@ class SessionManager(object):
         request_handler.set_cookie("hmac_key", session.hmac_key)
         session_data = self.serialize(session)
         return self.client.setex(
-                session.session_id, self.session_timeout, session_data)
+            session.session_id, self.session_timeout, session_data)
 
     def _generate_session_id(self):
         return hashlib.sha256(self.secret + str(uuid.uuid4())).hexdigest()
@@ -118,6 +128,7 @@ class SessionManager(object):
 
 
 class MySQLStore(object):
+
     def __init__(self, db, table_name="yagra_sessions"):
         self.db = db
         self.table_name = table_name
@@ -139,9 +150,10 @@ class MySQLStore(object):
                     VALUES('{1}', '{2}', '{3}') ON DUPLICATE KEY UPDATE
                     expire_date='{2}', session_data='{3}'
                     """
-        exprired = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
+        exprired = datetime.datetime.now() + \
+            datetime.timedelta(seconds=timeout)
         exprired = exprired.strftime("%Y-%m-%d %H:%M:%S")
         sql_string = base_string.format(
-                self.table_name, session_id, exprired, raw_data)
+            self.table_name, session_id, exprired, raw_data)
 
         return self.db.update(sql_string)

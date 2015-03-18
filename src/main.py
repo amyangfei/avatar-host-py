@@ -16,8 +16,8 @@ def main():
         "app_log": {
             "redirect_path": "/var/log/yagra/app.log",
             "log_level": "DEBUG",
-            "log_format_str": "%(asctime)s [%(levelname)s] %(pathname)s" \
-                                ":%(lineno)s %(message)s",
+            "log_format_str": "%(asctime)s [%(levelname)s] %(pathname)s"
+            ":%(lineno)s %(message)s",
         },
         "template_path": os.path.join(os.path.dirname(__file__), "templates"),
         "static_path": os.path.join(os.path.dirname(__file__), "static"),

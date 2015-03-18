@@ -18,18 +18,21 @@ from functools import wraps
 import typhoon
 from typhoon.log import default_log_setting, app_log
 from typhoon.util import (import_object, format_timestamp, unicode_type,
-                        json_encode, utf8, unquote_or_none, create_signature,
-                        xhtml_escape, digest_equals)
+                          json_encode, utf8, unquote_or_none, create_signature,
+                          xhtml_escape, digest_equals)
 from typhoon.cgiutil import CGIConnection, CGIRequest, HTTPHeaders
 
 
 class StdStream(object):
+
     def write(self, chunk):
         sys.stdout.write(chunk)
 
 
 class URLSpec(object):
+
     """Specifies mappings between URLs and handlers."""
+
     def __init__(self, pattern, handler, kwargs=None):
         if not pattern.endswith('$'):
             pattern += '$'
@@ -45,6 +48,7 @@ class URLSpec(object):
 
 
 class HTTPError(Exception):
+
     """An exception that will turn into an HTTP error response."""
 
     def __init__(self, status_code, log_message=None, *args, **kwargs):
@@ -64,6 +68,7 @@ class HTTPError(Exception):
 
 
 class MissingArgumentError(HTTPError):
+
     """Exception raised by `RequestHandler.get_argument`."""
 
     def __init__(self, arg_name):
@@ -73,6 +78,7 @@ class MissingArgumentError(HTTPError):
 
 
 class RequestHandler(object):
+
     def __init__(self, application, request, **kwargs):
         super(RequestHandler, self).__init__()
 
@@ -201,11 +207,12 @@ class RequestHandler(object):
             self.clear_cookie(name, path=path, domain=domain)
 
     def set_secure_cookie(self, name, value, **params):
-        expires_days = \
-            self.application.settings.get("session_timeout", 86400 * 15) / 86400
+        expires_days = self.application.settings.get(
+            "session_timeout",
+            86400 * 15) / 86400
         encrypted_cookie = self.encrypt_cookie(name, value)
         self.set_cookie(
-                name, encrypted_cookie, expires_days=expires_days, **params)
+            name, encrypted_cookie, expires_days=expires_days, **params)
 
     def get_secure_cookie(self, name):
         encrypt_data = self.get_cookie(name)
@@ -248,10 +255,10 @@ class RequestHandler(object):
         if not hasattr(self, "_xsrf_token"):
             version, token, timestamp = self._get_raw_xsrf_token()
             self._xsrf_token = b"|".join([
-                    b"2",
-                    binascii.b2a_hex(token),
-                    str(int(timestamp)),
-                ]
+                b"2",
+                binascii.b2a_hex(token),
+                str(int(timestamp)),
+            ]
             )
 
             if version is None:
@@ -326,14 +333,18 @@ class RequestHandler(object):
         self._write_buffer.append(chunk)
 
     def _gen_resp_header(self):
-        header_lines = ['Status: {0} {1}'.format(self._status_code,
-                httplib.responses.get(self._status_code, 'METHOD NOT FOUND'))]
+        header_lines = [
+            'Status: {0} {1}'.format(
+                self._status_code,
+                httplib.responses.get(
+                    self._status_code,
+                    'METHOD NOT FOUND'))]
         for k, v in self._headers.iteritems():
             header_lines.append('{0}: {1}'.format(k, v))
         if hasattr(self, "_new_cookie"):
             for cookie in self._new_cookie.values():
                 header_lines.append(
-                        'Set-Cookie: {}'.format(cookie.OutputString(None)))
+                    'Set-Cookie: {}'.format(cookie.OutputString(None)))
         return '\r\n'.join(header_lines) + '\r\n\r\n'
 
     def flush(self):
@@ -375,7 +386,7 @@ class RequestHandler(object):
         self.set_status(status_code, reason=reason)
         try:
             self.write_error(status_code, **kwargs)
-        except Exception, e:
+        except Exception as e:
             app_log.error("write error failed %s", e)
 
     def _execute(self, *args):
@@ -387,19 +398,25 @@ class RequestHandler(object):
 
             self.prepare()
             getattr(self, self.request.method.lower())(*args)
-        except Exception, e:
+        except Exception as e:
             self._handle_requeset_exception(e)
         finally:
             self.flush()
 
             self.request._finish_time = time.time()
-            app_log.info('%s %s %s %s %.0f ms', self._status_code,
-                    self.request.method, self.request.uri, self.request.remote_addr,
-                    (self.request._finish_time - self.request._start_time) * 1000)
+            app_log.info(
+                '%s %s %s %s %.0f ms',
+                self._status_code,
+                self.request.method,
+                self.request.uri,
+                self.request.remote_addr,
+                (self.request._finish_time - self.request._start_time) * 1000)
 
 
 class ErrorHandler(RequestHandler):
+
     """Generates an error response with ``status_code`` for all requests."""
+
     def initialize(self, status_code):
         self.set_status(status_code)
 
@@ -408,6 +425,7 @@ class ErrorHandler(RequestHandler):
 
 
 class Application(object):
+
     def __init__(self, handlers=None, **settings):
         # At this point get true start time for request processing
         start_time = time.time()
@@ -449,14 +467,14 @@ class Application(object):
             "If-Modified-Since": env.get("HTTP_IF_MODIFIED_SINCE", ""),
         }
         request = CGIRequest(
-            method = env.get("REQUEST_METHOD"),
-            uri = env.get("REQUEST_URI"),
-            version = env.get('SERVER_PROTOCOL'),
-            headers = headers,
-            host = env.get("HTTP_HOST"),
-            remote_addr = env.get('REMOTE_ADDR'),
-            connection = connection,
-            start_time = start_time,
+            method=env.get("REQUEST_METHOD"),
+            uri=env.get("REQUEST_URI"),
+            version=env.get('SERVER_PROTOCOL'),
+            headers=headers,
+            host=env.get("HTTP_HOST"),
+            remote_addr=env.get('REMOTE_ADDR'),
+            connection=connection,
+            start_time=start_time,
         )
         self._request = request
 

@@ -12,15 +12,17 @@ import os
 from functools import partial, wraps
 
 
-# Template Related Class #######################################################
+# Template Related Class #################################################
 
 class TemplateBlock(object):
+
     def __init__(self, segments, name):
         self.segments = segments
         self._name = name
 
     def render_value_in_context(self, context):
-        # segment is a partial object that can render token_contents with context
+        # segment is a partial object that can render token_contents with
+        # context
         for lineno, segment in self.segments:
             try:
                 segment(context)
@@ -31,6 +33,7 @@ class TemplateBlock(object):
 
 
 class Template(TemplateBlock):
+
     def __init__(self, segments, name, params, meta):
         super(Template, self).__init__(segments, name)
         self._params = params
@@ -53,6 +56,7 @@ class Template(TemplateBlock):
 
 
 class TemplateError(Exception):
+
     def __init__(self, message, template_name, template_lineno):
         super(TemplateError, self).__init__(message)
         self.template_name = template_name
@@ -61,7 +65,7 @@ class TemplateError(Exception):
     def __str__(self):
         message = super(TemplateError, self).__str__()
         return "{} [{} on line {}]".\
-                format(message, self.template_name, self.template_lineno)
+            format(message, self.template_name, self.template_lineno)
 
 
 class TemplateRenderError(TemplateError):
@@ -74,7 +78,7 @@ class TemplateCompileError(TemplateError):
     pass
 
 
-# Template Parser ##############################################################
+# Template Parser ########################################################
 
 RE_TOKEN = re.compile(
     # comment, no token mapping
@@ -84,9 +88,7 @@ RE_TOKEN = re.compile(
     "|{{\s*(.*?)\s*}}"
 
     # macro, mapping to TOKEN_BLOCK
-    "|{%\s*(.*?)\s*%}"
-
-    , re.DOTALL
+    "|{%\s*(.*?)\s*%}", re.DOTALL
 )
 
 TOKEN_STR = 0
@@ -98,7 +100,9 @@ TOKEN_MAP = {
     TOKEN_BLOCK: "block",
 }
 
+
 class Lexer(object):
+
     def __init__(self, template_string):
         self.template_string = template_string
         self.lineno = 1
@@ -142,6 +146,7 @@ DEFAULT_ESCAPE_FUNCS = {
 
 
 class Parser(object):
+
     def __init__(self, macros, escape_func=DEFAULT_ESCAPE_FUNCS):
         self._macros = macros
         self._escape_func = escape_func
@@ -169,7 +174,7 @@ class Parser(object):
                     segment = partial(_string_segment, token_contents)
                 elif token_type == TOKEN_MAP[TOKEN_VAR]:
                     segment = partial(_var_segment,
-                            _val_evaluate(token_contents))
+                                      _val_evaluate(token_contents))
                 elif token_type == TOKEN_MAP[TOKEN_BLOCK]:
                     segment = None
                     for macro in self._macros:
@@ -180,12 +185,15 @@ class Parser(object):
                         return end_segment_handler(token_contents, segments)
                 else:
                     assert False, "{} isn't a valid token type.".\
-                            format(token_type)
+                        format(token_type)
                 segments.append((lineno, segment))
             except TemplateCompileError:
                 raise
             except Exception as e:
-                raise TemplateCompileError(str(e), self.run.get('name'), lineno)
+                raise TemplateCompileError(
+                    str(e),
+                    self.run.get('name'),
+                    lineno)
 
         # No unknown macro
         return end_segment_handler(None, segments)
@@ -193,8 +201,8 @@ class Parser(object):
     def parse_all_segments(self, template_string, name):
         def end_segment_handler(token_contents, segments):
             if token_contents:
-                raise SyntaxError("{{% {} %}} is not a recognized tag." \
-                        .format(token_contents))
+                raise SyntaxError("{{% {} %}} is not a recognized tag."
+                                  .format(token_contents))
             return segments
         return self.parse_template_segment(end_segment_handler)
 
@@ -203,19 +211,20 @@ class Parser(object):
         """
         def end_segment_handler(token_contents, segments):
             if not token_contents:
-                raise SyntaxError("{} tag could not find a corresponding {}."\
-                        .format(start_tag, end_tag))
+                raise SyntaxError("{} tag could not find a corresponding {}."
+                                  .format(start_tag, end_tag))
             match = regex.match(token_contents)
             if not match:
-                raise SyntaxError("{} is not a recognizd tag".\
-                        format(token_contents))
+                raise SyntaxError("{} is not a recognizd tag".
+                                  format(token_contents))
             return match, TemplateBlock(segments, self.run.get('name'))
         return self.parse_template_segment(end_segment_handler)
 
 
-# Context Related ##############################################################
+# Context Related ########################################################
 
 class Context:
+
     def __init__(self, params, meta, buffer):
         self.params = params
         self.meta = meta
@@ -265,6 +274,7 @@ def name_setter(name):
     # like case: for k, v in dictobj.iteritems():
     if "," in name:
         names = [x.strip() for x in name.split(",")]
+
         def setter(context, value):
             value = iter(value)
             for single_name in names:
@@ -278,16 +288,16 @@ def name_setter(name):
                 pass
             else:
                 raise ValueError(
-                        "need more than {} values to unpack".format(len(names)))
+                    "need more than {} values to unpack".format(len(names)))
     else:
         names = [name, ]
+
         def setter(context, value):
             context.params[name] = value
     return setter
 
 
-
-# Macro Extension ##############################################################
+# Macro Extension ########################################################
 
 """
 Each "token_macro" function returns a partial object with the structure of
@@ -296,8 +306,10 @@ function(context), also known as "segment" in our system.
 Each "token_block" function is the final rendering function.
 """
 
+
 def token_regex_check(regex):
     regex = re.compile(regex, re.DOTALL)
+
     def decorator(func):
         @wraps(func)
         def wrapper(parser_run, token):
@@ -319,6 +331,7 @@ def if_block(clauses, else_block, context):
 
 
 RE_IF_BLOCK = re.compile("^(elif) (.+?)$|^(else)$|^(endif)$")
+
 
 @token_regex_check("^if\s+(.+?)$")
 def if_macro(parser, expression):
@@ -354,10 +367,15 @@ def for_block(set_name, evaluate, block, context):
 
 RE_ENDFOR = re.compile("^endfor$")
 
+
 @token_regex_check("^for\s+(.+?)\s+in\s+(.+?)$")
 def for_macro(parser, name, variable):
     macth, block = parser.parse_block("for", "endfor", RE_ENDFOR)
-    return partial(for_block, name_setter(name), _val_evaluate(variable), block)
+    return partial(
+        for_block,
+        name_setter(name),
+        _val_evaluate(variable),
+        block)
 
 
 def get_template(context, template):
@@ -368,8 +386,8 @@ def get_template(context, template):
         if not loader:
             raise ValueError("Cannot load {} by name.".format(template))
         return loader.load(template)
-    raise TypeError("Expected a Template or a str, can not be {}."\
-            .format(type(template)))
+    raise TypeError("Expected a Template or a str, can not be {}."
+                    .format(type(template)))
 
 
 def include_block(evaluate, context):
@@ -385,14 +403,16 @@ def include_macro(parser, expression):
 DEFAULT_MACROS = (if_macro, for_macro, include_macro, )
 
 
-# Template Loader ##############################################################
+# Template Loader ########################################################
 
 class BaseSource(object):
+
     def load(self, template_name):
         raise NotImplementedError
 
 
 class MemorySource(BaseSource):
+
     def __init__(self, template_map):
         """template_map mapping from a template name to template content"""
         self.templates = template_map
@@ -405,6 +425,7 @@ class MemorySource(BaseSource):
 
 
 class DirectorySource(BaseSource):
+
     def __init__(self, dirname):
         self.dirname = dirname
 
@@ -424,6 +445,7 @@ class TemplateNotFoundError(Exception):
 
 
 class Loader(object):
+
     def __init__(self, sources, parser):
         self._sources = sources
         self._parser = parser
@@ -449,21 +471,22 @@ class Loader(object):
             template_contents = source.load(template_name)
             if template_contents is not None:
                 compiled_template = self.compile(
-                        template_contents, template_name, {}, {})
+                    template_contents, template_name, {}, {})
                 self._cache[template_name] = compiled_template
                 return compiled_template
         raise TemplateNotFoundError(
-                "could not found template {}".format(template_name))
+            "could not found template {}".format(template_name))
 
     def render(self, template_name, **params):
         return self.load(template_name).render(**params)
 
 
-# Public Interface #############################################################
+# Public Interface #######################################################
 
 default_parser = Parser(DEFAULT_MACROS)
 
 compiler = default_parser.compile
+
 
 def render(template, **kwargs):
     return compiler(template).render(**kwargs)

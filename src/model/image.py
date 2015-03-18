@@ -7,6 +7,7 @@ from model.base import BaseDAO
 
 
 class ImageModel(object):
+
     def __init__(self, **kwargs):
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
@@ -17,14 +18,19 @@ class ImageModel(object):
 
 class ImageDAO(BaseDAO):
     # FIXME: access to both yagra_image table and yagra_user table
+
     def create_image(self, user_id, filename, md5_checksum, email_md5,
-            update_avatar):
+                     update_avatar):
         base_string = """INSERT INTO yagra_image
                     (user_id, filename, md5, created, email_md5)
                     VALUES ({0}, '{1}', '{2}', '{3}', '{4}')
                     """
-        sql_string = base_string.format(user_id, filename, md5_checksum,
-                time.strftime('%Y-%m-%d %H:%M:%S'), email_md5)
+        sql_string = base_string.format(
+            user_id,
+            filename,
+            md5_checksum,
+            time.strftime('%Y-%m-%d %H:%M:%S'),
+            email_md5)
         update_base_string = """UPDATE yagra_user
                     SET avatar = {0} where uid = {1}"""
         if not update_avatar:
@@ -56,7 +62,6 @@ class ImageDAO(BaseDAO):
 
         self.db.commit()
 
-
     def get_image_by_id(self, image_id):
         base_string = """
                 SELECT imgid, user_id, filename, created, md5, email_md5
@@ -68,9 +73,8 @@ class ImageDAO(BaseDAO):
         if raw:
             imgid, user_id, filename, created, md5, email_md5 = raw
             return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
-                    created=created, md5=md5, email_md5=email_md5,)
+                              created=created, md5=md5, email_md5=email_md5,)
         return None
-
 
     def get_image_by_uid_and_md5(self, user_id, md5_checksum):
         base_string = """
@@ -83,7 +87,7 @@ class ImageDAO(BaseDAO):
         if raw:
             imgid, user_id, filename, created, md5, email_md5 = raw
             return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
-                    created=created, md5=md5, email_md5=email_md5,)
+                              created=created, md5=md5, email_md5=email_md5,)
         return None
 
     def get_image_by_emailmd5(self, email_md5):
@@ -97,7 +101,7 @@ class ImageDAO(BaseDAO):
         if raw:
             imgid, user_id, filename, created, md5, email_md5 = raw
             return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
-                    created=created, md5=md5, email_md5=email_md5,)
+                              created=created, md5=md5, email_md5=email_md5,)
         return None
 
     def get_own_image_count(self, user_id):
@@ -121,10 +125,15 @@ class ImageDAO(BaseDAO):
         if raw:
             for row in raw:
                 imgid, user_id, filename, created, md5, email_md5 = row
-                images.append(ImageModel(imgid=imgid, user_id=user_id,
-                    filename=filename, created=created, md5=md5,
-                    email_md5=email_md5,)
-                )
+                images.append(
+                    ImageModel(
+                        imgid=imgid,
+                        user_id=user_id,
+                        filename=filename,
+                        created=created,
+                        md5=md5,
+                        email_md5=email_md5,
+                    ))
         return images
 
     def get_user_last_upload_image(self, user_id):
@@ -138,5 +147,5 @@ class ImageDAO(BaseDAO):
         if raw:
             imgid, user_id, filename, created, md5, email_md5 = raw
             return ImageModel(imgid=imgid, user_id=user_id, filename=filename,
-                    created=created, md5=md5, email_md5=email_md5,)
+                              created=created, md5=md5, email_md5=email_md5,)
         return None

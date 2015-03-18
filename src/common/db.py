@@ -6,6 +6,7 @@ import MySQLdb
 
 def singleton(cls, *args, **kw):
     instances = {}
+
     def _singleton(*args, **kw):
         if cls not in instances:
             instances[cls] = cls(*args, **kw)
@@ -15,6 +16,7 @@ def singleton(cls, *args, **kw):
 
 @singleton
 class DB():
+
     def __init__(self, host, port, user, password, dbname):
         self.host = host
         self.port = port
@@ -27,12 +29,12 @@ class DB():
 
     def _get_connection(self):
         return MySQLdb.Connect(
-            host = self.host,
-            port = self.port,
-            user = self.user,
-            passwd = self.password,
-            db = self.dbname,
-            charset = 'utf8'
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            passwd=self.password,
+            db=self.dbname,
+            charset='utf8'
         )
 
     def query(self, sql_string):

@@ -8,7 +8,8 @@ from model.user import UserDAO
 RE_USERNAME = re.compile("^[a-zA-Z][a-zA-Z0-9_]{2,19}$")
 
 # not quite complete enough, doesn't support hello@bla-bla.com etc.
-RE_EMAIL = re.compile(r"^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$")
+RE_EMAIL = re.compile(
+    r"^[_A-Za-z0-9-\+]+(\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\.[A-Za-z0-9]+)*(\.[A-Za-z]{2,})$")
 
 PASS_MIN_LEN = 3
 PASS_MAX_LEN = 32
@@ -19,6 +20,7 @@ class FormNotVaidateError(Exception):
 
 
 class BaseForm(object):
+
     def __init__(self, request_handler):
         self.handler = request_handler
         self.validated = False
@@ -65,7 +67,7 @@ class RegisterForm(BaseForm):
         password_confirm = self.get_argument("password_confirm")
         if password_confirm is None:
             self.errors.append("必须填写确认密码")
-        elif password != None and password != password_confirm:
+        elif password is not None and password != password_confirm:
             self.errors.append("两次输入密码不一致")
 
         self.validated = True
@@ -73,7 +75,8 @@ class RegisterForm(BaseForm):
         self.fields["email"] = email
         self.fields["password"] = password
 
-        # validations above don't require to connect to DB, so we check them first.
+        # validations above don't require to connect to DB, so we check them
+        # first.
         if len(self.errors) > 0:
             return False
 
@@ -86,6 +89,7 @@ class RegisterForm(BaseForm):
 
 
 class LoginForm(BaseForm):
+
     def validate(self):
         email = self.get_argument("email")
         if email is None:

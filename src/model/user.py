@@ -8,6 +8,7 @@ from model.base import BaseDAO
 
 
 class UserModel(object):
+
     def __init__(self, uid, username, email, created, password, salt, avatar):
         self.uid = uid
         self.username = username
@@ -23,6 +24,7 @@ class UserModel(object):
 
 
 class UserDAO(BaseDAO):
+
     def create_user(self, username, email, password, salt):
         # TODO: security detection, such as SQL injection
         base_string = """INSERT INTO yagra_user
@@ -30,7 +32,7 @@ class UserDAO(BaseDAO):
                     VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')
                     """
         sql_string = base_string.format(username, email, password, salt,
-                time.strftime('%Y-%m-%d %H:%M:%S'))
+                                        time.strftime('%Y-%m-%d %H:%M:%S'))
         return self.db.update(sql_string)
 
     def get_user_by_one_unique_filed(self, field_name, field_value):
@@ -43,13 +45,13 @@ class UserDAO(BaseDAO):
         if raw:
             uid, username, email, password, salt, created, avatar = raw
             return UserModel(
-                uid = uid,
-                username = username,
-                email = email,
-                password = password,
-                salt = salt,
-                created = created,
-                avatar = avatar,
+                uid=uid,
+                username=username,
+                email=email,
+                password=password,
+                salt=salt,
+                created=created,
+                avatar=avatar,
             )
         return raw
 

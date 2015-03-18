@@ -11,6 +11,7 @@ from typhoon.util import utf8
 
 
 class CGIConnection(object):
+
     def __init__(self, stream):
         self.stream = stream
 
@@ -23,6 +24,7 @@ class CGIConnection(object):
 
 
 class CGIRequest(object):
+
     def __init__(self, method=None, uri=None, version=None, headers=None,
                  body=None, host=None, remote_addr=None, connection=None,
                  start_time=None
@@ -76,6 +78,7 @@ class CGIRequest(object):
 
 
 class HTTPHeaders(dict):
+
     def __init__(self, *args, **kwargs):
         # Don't pass args or kwargs to dict.__init__, as it will bypass
         # our __setitem__

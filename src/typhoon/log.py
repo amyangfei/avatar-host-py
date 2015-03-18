@@ -19,7 +19,7 @@ def default_log_setting(redirect_path=None, log_level='DEBUG',
         app_log.setLevel(log_level)
         log_handler = logging.FileHandler(redirect_path)
         lformat = logging.Formatter(log_format_str) if log_format_str else \
-                logging.Formatter('%(asctime)s [%(levelname)s] %(pathname)s' \
-                ':%(lineno)s %(message)s')
+            logging.Formatter('%(asctime)s [%(levelname)s] %(pathname)s'
+                              ':%(lineno)s %(message)s')
         log_handler.setFormatter(lformat)
         app_log.addHandler(log_handler)

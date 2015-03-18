@@ -50,6 +50,8 @@ def paginator(current_page, item_counts, item_per_page):
 http://stackoverflow.com/questions/7460218/get-image-size-wihout-downloading-it-in-python
 https://code.google.com/p/bfg-pages/source/browse/trunk/pages/getimageinfo.py
 """
+
+
 def get_image_ext(data):
     data = str(data)
     size = len(data)

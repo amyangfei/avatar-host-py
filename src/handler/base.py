@@ -11,13 +11,15 @@ from common.db import DB
 
 
 class BaseHandler(RequestHandler):
+
     def __init__(self, *argc, **kwargs):
         super(BaseHandler, self).__init__(*argc, **kwargs)
         self.template_loader = Loader(
-            sources = [
-                DirectorySource(self.application.settings.get("template_path")),
+            sources=[
+                DirectorySource(
+                    self.application.settings.get("template_path")),
             ],
-            parser = default_parser,
+            parser=default_parser,
         )
 
     def render(self, template_name, **template_vars):
@@ -51,19 +53,21 @@ class BaseHandler(RequestHandler):
 keep a resident session manager. We only create session manager if we needed as
 creating and destroying a db connection is quite excessive.
 """
+
+
 def get_session(request_handler):
     db_config = request_handler.get_db_config()
     db = DB(
-        host = db_config["host"],
-        port = db_config["port"],
-        user = db_config["user"],
-        password = db_config["password"],
-        dbname = db_config["dbname"],
+        host=db_config["host"],
+        port=db_config["port"],
+        user=db_config["user"],
+        password=db_config["password"],
+        dbname=db_config["dbname"],
     )
     data_store = MySQLStore(db)
     session_manager = SessionManager(
-            request_handler.application.settings.get('secure_key'), data_store,
-            request_handler.application.settings.get('session_timeout'))
+        request_handler.application.settings.get('secure_key'), data_store,
+        request_handler.application.settings.get('session_timeout'))
     return Session(session_manager, request_handler)
 
 

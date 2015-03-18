@@ -22,6 +22,7 @@ def do_login(request_handler, user):
 
 
 class LoginHandler(BaseHandler):
+
     def get(self, **template_vars):
         template_vars.update({
             "active_page": "home",
@@ -54,6 +55,7 @@ class LoginHandler(BaseHandler):
 
 
 class LogoutHandler(BaseHandler):
+
     def do_logout(self):
         self.session.clear()
         self.clear_all_cookies()
@@ -65,6 +67,7 @@ class LogoutHandler(BaseHandler):
 
 
 class RegisterHandler(BaseHandler):
+
     def get(self, **template_vars):
         template_vars.update({
             "active_page": "home",
@@ -85,8 +88,8 @@ class RegisterHandler(BaseHandler):
         secure_password = password_hash(password, salt)
 
         user_dao = UserDAO(self.get_db_config())
-        create_result, _ = user_dao.create_user(username=username, email=email,
-                password=secure_password, salt=salt)
+        create_result, _ = user_dao.create_user(
+            username=username, email=email, password=secure_password, salt=salt)
 
         if create_result == 1:
             app_log.info("new user registered successfully email=%s", email)

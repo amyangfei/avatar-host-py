@@ -5,6 +5,7 @@ import unittest
 
 from typhoon import template
 
+
 class TestRender(unittest.TestCase):
 
     def testStringTag(self):
@@ -12,13 +13,21 @@ class TestRender(unittest.TestCase):
             "hello\tworld\n中文"), "hello\tworld\n中文")
 
     def testCommantTag(self):
-        self.assertEqual(template.render("text{# this is a comment #}"), "text")
+        self.assertEqual(
+            template.render("text{# this is a comment #}"),
+            "text")
         self.assertEqual(template.render("{# multi\nline\ncomment #}"), "")
 
     def testExpressionTag(self):
         self.assertEqual(template.render("{{'hello'}}"), "hello")
-        self.assertEqual(template.render("{{('hello '\n'world')}}"), "hello world")
-        self.assertEqual(template.render("{{ hello }}", hello="world"), "world")
+        self.assertEqual(
+            template.render("{{('hello '\n'world')}}"),
+            "hello world")
+        self.assertEqual(
+            template.render(
+                "{{ hello }}",
+                hello="world"),
+            "world")
 
     def testIfMacro(self):
         # Test single if.
@@ -26,69 +35,71 @@ class TestRender(unittest.TestCase):
         self.assertEqual(template1.render(test="foo"), "foo")
         self.assertEqual(template1.render(test="bar"), "")
         # Test if and else.
-        template2 = template.compiler("{% if test == 'foo' %}foo{% else %}bar{% endif %}")
+        template2 = template.compiler(
+            "{% if test == 'foo' %}foo{% else %}bar{% endif %}")
         self.assertEqual(template2.render(test="foo"), "foo")
         self.assertEqual(template2.render(test="bar"), "bar")
         # Test if, elif and else.
         template3 = template.compiler(
-                "{% if test == 'foo' %}foo{% elif test == 'bar' %}bar"
-                "{% else %}foobar{% endif %}")
+            "{% if test == 'foo' %}foo{% elif test == 'bar' %}bar"
+            "{% else %}foobar{% endif %}")
         self.assertEqual(template3.render(test="foo"), "foo")
         self.assertEqual(template3.render(test="bar"), "bar")
         self.assertEqual(template3.render(test=""), "foobar")
         # Test if and elif
         template4 = template.compiler(
-                "{% if test == 'foo' %}foo{% elif test == 'bar' %}bar"
-                "{% elif test == 'foobar' %}foobar{% endif %}")
+            "{% if test == 'foo' %}foo{% elif test == 'bar' %}bar"
+            "{% elif test == 'foobar' %}foobar{% endif %}")
         self.assertEqual(template4.render(test="foo"), "foo")
         self.assertEqual(template4.render(test="bar"), "bar")
         self.assertEqual(template4.render(test="foobar"), "foobar")
         self.assertEqual(template4.render(test="no"), "")
         # Test various syntax errors.
         self.assertRaises(template.TemplateCompileError,
-                lambda: template.compiler("{% if True %}"))
+                          lambda: template.compiler("{% if True %}"))
+        self.assertRaises(
+            template.TemplateCompileError,
+            lambda: template.compiler("{% if True %}{% else %}{% elif True %}{% endif %}"))
         self.assertRaises(template.TemplateCompileError,
-                lambda: template.compiler(
-                    "{% if True %}{% else %}{% elif True %}{% endif %}"))
-        self.assertRaises(template.TemplateCompileError,
-                lambda: template.compiler(
-                    "{% if True %}{% else %}{% else %}{% endif %}"))
+                          lambda: template.compiler(
+                              "{% if True %}{% else %}{% else %}{% endif %}"))
 
     def testForMacro(self):
         # Test basic functionality.
         template1 = template.compiler(
-                "{% for i in range(5) %}{{ i }}{% endfor %}")
+            "{% for i in range(5) %}{{ i }}{% endfor %}")
         self.assertEqual(template1.render(), "01234")
         # Test various syntax errors.
-        self.assertRaises(template.TemplateCompileError,
-                lambda: template.compiler("{% for n in range(0, 3) %}"))
+        self.assertRaises(
+            template.TemplateCompileError,
+            lambda: template.compiler("{% for n in range(0, 3) %}"))
         # Test variable expansion.
         template2 = template.compiler(
-                "{% for n, m in value %}{{ n }}{{ m }}{% endfor %}")
+            "{% for n, m in value %}{{ n }}{{ m }}{% endfor %}")
         self.assertEqual(template2.render(value=[["foo", "bar"]]), "foobar")
         self.assertRaises(template.TemplateRenderError,
-                lambda: template2.render(value=[["foo"]]))
-        self.assertRaises(template.TemplateRenderError,
-                lambda: template2.render(value=[["foo", "bar", "foobar"]]))
+                          lambda: template2.render(value=[["foo"]]))
+        self.assertRaises(template.TemplateRenderError, lambda: template2.render(
+            value=[["foo", "bar", "foobar"]]))
         template3 = template.compiler(
-                "{% for n in range(2) %}"
-                "<img src=\"http://img.mxiaonao.me/{{n}}.jpg\" />{% endfor %}")
+            "{% for n in range(2) %}"
+            "<img src=\"http://img.mxiaonao.me/{{n}}.jpg\" />{% endfor %}")
         self.assertEqual(template3.render(),
-                "<img src=\"http://img.mxiaonao.me/0.jpg\" />"
-                "<img src=\"http://img.mxiaonao.me/1.jpg\" />")
+                         "<img src=\"http://img.mxiaonao.me/0.jpg\" />"
+                         "<img src=\"http://img.mxiaonao.me/1.jpg\" />")
         template4 = template.compiler(
-                "{% for n in range(5) %}{% if n > 2 %}{{ n }}{% endif %}{% endfor %}")
+            "{% for n in range(5) %}{% if n > 2 %}{{ n }}{% endif %}{% endfor %}")
         self.assertEqual(template4.render(), "34")
 
     def testIncludeMacro(self):
         template1 = template.compiler("template1")
         template2 = template.compiler("template2 include {% include t1 %}")
         self.assertEqual(
-                template2.render(t1=template1), "template2 include template1")
+            template2.render(t1=template1), "template2 include template1")
 
 
 test_loader = template.Loader(
-    sources = [
+    sources=[
         template.MemorySource({
             "base.html": "<html><head>{{ head }}</head><body>{{ body }}</body></html>",
             "include1.html": "<div>{{ content}}</div>",
@@ -97,7 +108,7 @@ test_loader = template.Loader(
             "include4.html": "<body>{% include 'include2.html' %}</body>",
         }),
     ],
-    parser = template.default_parser,
+    parser=template.default_parser,
 )
 
 
@@ -116,9 +127,9 @@ class TestLoader(unittest.TestCase):
 
     def testInclude(self):
         self.assertEqual(test_loader.render("include3.html", content="world"),
-                "<body><div>world</div></body>")
+                         "<body><div>world</div></body>")
         self.assertEqual(test_loader.render("include4.html"),
-                "<body><div>hello</div></body>")
+                         "<body><div>hello</div></body>")
 
 
 if __name__ == '__main__':

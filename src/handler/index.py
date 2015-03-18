@@ -6,6 +6,7 @@ from typhoon.log import app_log
 
 
 class MainHandler(BaseHandler):
+
     def get(self):
         template_vars = {
             "test": "from typhoon cgi-based web framework",
@@ -15,6 +16,7 @@ class MainHandler(BaseHandler):
 
 
 class AboutHandler(BaseHandler):
+
     def get(self):
         template_vars = {
             "active_page": "about",

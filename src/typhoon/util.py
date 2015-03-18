@@ -35,6 +35,8 @@ unicode_type = unicode
 basestring_type = basestring
 
 _UTF8_TYPES = (bytes, type(None))
+
+
 def utf8(value):
     """Converts a string argument to a byte string.
 
@@ -135,13 +137,17 @@ def to_basestring(value):
     if isinstance(value, (basestring, type(None))):
         return value
     if not isinstance(value, bytes):
-        raise TypeError("expected bytes, unicode, or None; got %r" % type(value))
+        raise TypeError(
+            "expected bytes, unicode, or None; got %r" %
+            type(value))
     return value.decode("utf-8")
 
 
 def xhtml_escape(value):
-    return _XHTML_ESCAPE_RE.sub(lambda match: _XHTML_ESCAPE_DICT[match.group(0)],
-                                to_basestring(value))
+    return _XHTML_ESCAPE_RE.sub(
+        lambda match: _XHTML_ESCAPE_DICT[
+            match.group(0)],
+        to_basestring(value))
 
 
 def digest_equals(a, b):
