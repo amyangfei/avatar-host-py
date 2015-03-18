@@ -68,7 +68,7 @@ class UploadHandler(BaseHandler):
             return self.get(errors=["上传图片失败"])
 
 
-class AccessHandler(BaseHandler):
+class AccessHandlerV1(BaseHandler):
     def get(self, email_md5, **template_vars):
         image_dao = ImageDAO(self.get_db_config())
         image = image_dao.get_image_by_emailmd5(email_md5)
@@ -102,6 +102,18 @@ class AccessHandler(BaseHandler):
         except IOError, e:
             app_log.error("file %s not found %s", image_fullpath, e)
             self.set_status(500)
+
+
+class AccessHandlerV2(BaseHandler):
+    def get(self, email_md5, **template_vars):
+        image_dao = ImageDAO(self.get_db_config())
+        image = image_dao.get_image_by_emailmd5(email_md5)
+        if image:
+            image_url = image.get_url()
+        else:
+            image_url = "/static/img/default.png"
+
+        self.redirect(image_url)
 
 
 class ManageHandler(BaseHandler):

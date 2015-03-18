@@ -15,17 +15,6 @@
             <div class="col-md-9 left">
                 <div class="container-box">
                     <div>
-                        {% for error in errors %}
-                        <li>{{ error}}</li>
-                        {% endfor %}
-                    </div>
-                    <div>
-                        {% for notice in notify %}
-                        <li>{{ notice }}</li>
-                        {% endfor %}
-                    </div>
-
-                    <div>
                         <div id="legend" class="mb30">
                             <legend class="">您目前拥有 {{ count }} 张图片</legend>
                         </div>
@@ -76,6 +65,15 @@
                             </nav>
                         </div>
                         {% endif %}
+
+                        <div class="alert alert-error collapse mt15" id="manage-error-div">
+                            <li id="manage-error-li"></li>
+                        </div>
+
+                        <div class="alert alert-success collapse" id="manage-success-div">
+                            <li id="manage-success-li"></li>
+                        </div>
+
                     </div>
                 </div><!--container-box-->
             </div><!--col-md-9-->
@@ -84,7 +82,8 @@
                 <div class="sidenav container-box">
                     <ul>
                         <li class=""><a href="javascript:;">{{ current_user.username }}</a></li>
-                        <li class="mt5"><a href="javascript:;"><img id="" class="sidebar-img" src="{{ current_user.get_avatar_url()}}" /></a></li>
+                        <li class="">您当前的头像</li>
+                        <li class="mt5"><img id="sidebar-avatar" class="sidebar-img" src="{{ current_user.get_avatar_url()}}" /></li>
                     </ul>
                 </div>
             </div>

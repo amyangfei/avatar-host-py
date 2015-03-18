@@ -13,9 +13,21 @@ $(function() {
             dataType: "json",
 
             success: function(data) {
-                alert(data.msg);
                 if (data.status == "ok") {
                     $("#nav_avatar").attr("src", data.new_avatar);
+                    $("#sidebar-avatar").attr("src", data.new_avatar);
+                    $("#manage-success-li").html(data.msg);
+                    $("#manage-success-div").show();
+                    setTimeout(function() {
+                        $("#manage-success-div").fadeOut(1000);
+                    }, 1500);
+                } else {
+                    $("#manage-error-li").html(data.msg);
+                    $("#manage-error-li").html(data.msg);
+                    $("#manage-error-div").show();
+                    setTimeout(function() {
+                        $("#manage-error-div").fadeOut(1000);
+                    }, 1000);
                 }
             },
             // Degbug
