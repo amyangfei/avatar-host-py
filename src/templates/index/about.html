@@ -2,31 +2,33 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Index Page</title>
+    <title>关于 | Yagra</title>
     <link rel="stylesheet" href="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="http://cdn.staticfile.org/prettify/r298/prettify.min.css" />
     <link rel="stylesheet" href="/static/css/main.css?t=20150310" />
 </head>
 
-<body>
+<body onload="prettyPrint()" >
     {% include 'index/nav.html' %}
 
     <div class="container">
 
       <!-- Main component for a primary marketing message or call to action -->
       <div class="jumbotron">
-        <h2>欢迎来到 Yagra</h2>
-        <p class="mt20">该站点提供了类似 <a href="http://gravatar.com" target="_blank">Gravatar.com</a> 的avatar hosting 服务</p>
-        <p>您可以上传、管理图片，并可以通过系统提供的 API 访问您的头像</p>
-        <p>
-            <a class="btn btn-default btn-primary mr5" href="/user/login" role="button">登录</a>
-            <a class="btn btn-default btn-primary mr5" href="/user/register" role="button">注册</a>
-            <a class="btn btn-default btn-primary" href="/about" role="button">使用帮助</a>
-        </p>
+        <h2>使用帮助</h2>
+        <p class="mt20">头像访问接口: {{ api_url }}/{md5 of your lowercase email}</p>
+        <p class="">例如您可以通过下边的 Python 代码获得所需的头像 api 地址</p>
+        <pre class="prettyprint lang-py">
+import hashlib
+
+email = "someone@somewhere.com"
+avatar_url = "{{ api_url }}/" + hashlib.md5(email.lower()).hexdigest()</pre>
       </div>
 
     </div> <!-- /container -->
 
     <script type="text/javascript" src="/static/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="http://cdn.staticfile.org/prettify/r298/prettify.min.js"></script>
     <script type="text/javascript" src="http://cdn.staticfile.org/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
 </body>
 </html>

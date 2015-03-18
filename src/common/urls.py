@@ -7,7 +7,6 @@ import handler.image
 
 handlers = [
     (r"/", handler.index.MainHandler),
-    (r"/regex/([0-9a-f]+)", handler.index.TestHandler),
 
     # user
     (r"/user/login", handler.user.LoginHandler),
@@ -19,4 +18,7 @@ handlers = [
     (r"/image/manage", handler.image.ManageHandler),
     (r"/image/([0-9a-fA-F]{32})", handler.image.AccessHandlerV1),
     (r"/image/setavatar", handler.image.SetAvatarHandler),
+
+    # about
+    (r"/about", handler.index.AboutHandler),
 ]

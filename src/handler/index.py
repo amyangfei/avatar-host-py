@@ -14,12 +14,10 @@ class MainHandler(BaseHandler):
         return self.render("index/index.html", **template_vars)
 
 
-class TestHandler(BaseHandler):
-    def get(self, idx):
-        self.write('test handler idx={}\n'.format(idx))
-
-    def post(self, idx):
-        name = self.get_argument('name', 'oooppps')
-        pid = self.get_argument('pid', '0')
-        app_log.info('post argument name=%s pid=%s', name, pid)
-        self.write('receive name = {0} id = {1}\n'.format(name, pid))
+class AboutHandler(BaseHandler):
+    def get(self):
+        template_vars = {
+            "active_page": "about",
+            "api_url": "http://{0}/image".format(self.request.host),
+        }
+        return self.render("index/about.html", **template_vars)
