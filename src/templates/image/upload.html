@@ -49,8 +49,7 @@
                     <div class="mt30">
                         <form action="" enctype="multipart/form-data" method="post">
                             <div class="form-group">
-                                <!-- <label for="exampleInputEmail1">上传</label> -->
-                                <input id="upload-input" type="file" name="upload" accept="image/*">
+                                <input id="upload-input" type="file" name="upload" accept="image/*" required="" />
                             </div>
                             <button type="submit" class="btn btn-default">上传</button>
                             <input type="hidden" name="_xsrf" value="{{ escaped_xsrf() }}">
