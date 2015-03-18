@@ -38,6 +38,9 @@ class UploadHandler(BaseHandler):
         user = self.current_user
         upload_file = self.request.upload_files.get("upload")
 
+        if upload_file.filename == "":
+            return self.get(errors=["请指定上传的图片"])
+
         _, ext = os.path.splitext(upload_file.filename)
         image_name = random_image_name(user.username) + ext
         image_fullpath = get_upload_image_fullpath(self, image_name)
