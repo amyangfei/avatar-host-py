@@ -79,7 +79,7 @@ class RegisterForm(BaseForm):
 
         # check the uniqueness of email
         user_dao = UserDAO(self.handler.get_db_config())
-        if user_dao.get_user_by_email(email):
+        if user_dao.get_user_by_email(email.lower()):
             self.errors.append("该邮箱已经被使用！")
 
         return False if len(self.errors) > 0 else True

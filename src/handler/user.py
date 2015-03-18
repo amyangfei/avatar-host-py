@@ -78,7 +78,7 @@ class RegisterHandler(BaseHandler):
             return self.render("user/register.html", errors=errors)
 
         username = form.get("username")
-        email = form.get("email")
+        email = form.get("email").lower()
         password = form.get("password")
 
         salt = generate_salt(16)
