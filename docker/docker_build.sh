@@ -1,6 +1,10 @@
 #!/bin/bash
 
 scriptdir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+project=yagra
+sep="----------------------------------------------------"
+red='\e[0;31m'
+NC='\e[0m' # No Color
 
 clean_old_containers_and_images() {
     sudo docker stop yagra-apache yagra-mysql yagra-nginx
@@ -47,6 +51,58 @@ start_containers() {
         --link yagra-apache:yagra-apache yagra/nginx
 }
 
-clean_old_containers_and_images $*
-build_images $*
-start_containers $*
+remove_containers() {
+    echo "remove all yagra containers..."
+    sudo docker stop yagra-apache yagra-mysql yagra-nginx
+    sudo docker rm yagra-apache yagra-mysql yagra-nginx
+}
+
+show_help() {
+    echo "Usage:"
+    echo ${sep}
+
+    echo -e "${red}clear${NC} all ${project} docker containers"
+    echo example: "$0 clear"
+    echo ""
+
+    echo -e "${red}drop${NC} all ${project} docker images"
+    echo example: "$0 drop"
+    echo ""
+
+    echo -e "${red}start${NC} fresh containers without rebuilding images"
+    echo example: "$0 start"
+    echo ""
+
+    echo -e "${red}clean-start${NC} fresh containers after rebuilding all images"
+    echo example: "$0 clean-start"
+    echo ""
+
+    echo ${sep}
+    exit 1
+}
+
+case "$1" in
+    clear)
+        shift 1
+        remove_containers $*
+        ;;
+    drop)
+        shift 1
+        clean_old_containers_and_images $*
+        ;;
+    start)
+        shift 1
+        remove_containers $*
+        start_containers $*
+        ;;
+    clean-start)
+        clean_old_containers_and_images $*
+        build_images $*
+        start_containers $*
+        shift 1
+        ;;
+    *)
+        show_help $*
+        ;;
+esac
+exit 0
