@@ -30,7 +30,7 @@ build_images() {
 # https://github.com/docker/docker/issues/7198
 # https://github.com/docker/docker/issues/3124
 start_containers() {
-    sudo docker run --name "yagra-mysql" -h "yagra-mysql" -d -p 3006:3306 \
+    sudo docker run --name "yagra-mysql" -h "yagra-mysql" -d \
         -e MYSQL_ROOT_PASSWORD=root -e MYSQL_USER=yagra \
         -e MYSQL_PASSWORD=yagra -e MYSQL_DATABASE=yagra yagra/mysql
 
