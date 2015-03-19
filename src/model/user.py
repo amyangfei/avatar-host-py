@@ -27,21 +27,25 @@ class UserDAO(BaseDAO):
 
     def create_user(self, username, email, password, salt):
         # TODO: security detection, such as SQL injection
-        base_string = """INSERT INTO yagra_user
+        sql_stmt = """INSERT INTO yagra_user
                     (username, email, password, salt, created)
-                    VALUES ('{0}', '{1}', '{2}', '{3}', '{4}')
+                    VALUES (%s, %s, %s, %s, %s)
                     """
-        sql_string = base_string.format(username, email, password, salt,
-                                        time.strftime('%Y-%m-%d %H:%M:%S'))
-        return self.db.update(sql_string)
+        params = (
+            username,
+            email,
+            password,
+            salt,
+            time.strftime('%Y-%m-%d %H:%M:%S'))
+        return self.db.update(sql_stmt, params)
 
     def get_user_by_one_unique_filed(self, field_name, field_value):
-        base_string = """SELECT uid, username, email, password,
+        sql_stmt = """SELECT uid, username, email, password,
                     salt, created, avatar
-                    FROM yagra_user where {0} = '{1}'
-                    """
-        sql_string = base_string.format(field_name, field_value)
-        raw = self.db.query_one(sql_string)
+                    FROM yagra_user where {0} = %s
+                    """.format(field_name)
+        params = (field_value, )
+        raw = self.db.query_one(sql_stmt, params)
         if raw:
             uid, username, email, password, salt, created, avatar = raw
             return UserModel(
@@ -62,8 +66,8 @@ class UserDAO(BaseDAO):
         return self.get_user_by_one_unique_filed("uid", uid)
 
     def set_user_avatar(self, uid, avatar_id):
-        base_string = """UPDATE yagra_user
-                    SET avatar = {0} WHERE uid = {1}
+        sql_stmt = """UPDATE yagra_user
+                    SET avatar = %s WHERE uid = %s
                     """
-        sql_string = base_string.format(avatar_id, uid)
-        return self.db.update(sql_string)
+        params = avatar_id, uid
+        return self.db.update(sql_stmt, params)

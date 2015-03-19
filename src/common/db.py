@@ -37,31 +37,31 @@ class DB():
             charset='utf8'
         )
 
-    def query(self, sql_string):
+    def query(self, sql_stmt, params):
         cursor = self.conn.cursor()
-        cursor.execute(sql_string)
+        cursor.execute(sql_stmt, params)
         data = cursor.fetchall()
         cursor.close()
         return data
 
-    def query_one(self, sql_string):
+    def query_one(self, sql_stmt, params):
         cursor = self.conn.cursor()
-        cursor.execute(sql_string)
+        cursor.execute(sql_stmt, params)
         data = cursor.fetchone()
         cursor.close()
         return data
 
-    def update(self, sql_string):
+    def update(self, sql_stmt, params):
         cursor = self.conn.cursor()
-        result = cursor.execute(sql_string)
+        result = cursor.execute(sql_stmt, params)
         lastrowid = cursor.lastrowid
         self.conn.commit()
         cursor.close()
         return result, lastrowid
 
-    def update_without_commit(self, sql_string):
+    def update_without_commit(self, sql_stmt, params):
         self._cursor = self._cursor or self.conn.cursor()
-        result = self._cursor.execute(sql_string)
+        result = self._cursor.execute(sql_stmt, params)
         lastrowid = self._cursor.lastrowid
         return result, lastrowid
 

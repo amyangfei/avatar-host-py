@@ -134,26 +134,28 @@ class MySQLStore(object):
         self.table_name = table_name
 
     def get_session_data(self, session_id):
-        base_string = """SELECT expire_date, session_data
-                    FROM {} where session_id='{}'"""
-        sql_string = base_string.format(self.table_name, session_id)
+        sql_stmt = """SELECT expire_date, session_data
+                    FROM {0} where session_id=%s"""
+        sql_stmt = sql_stmt.format(self.table_name)
+        params = (session_id, )
 
-        return self.db.query_one(sql_string)
+        return self.db.query_one(sql_stmt, params)
 
     def delete_session(self, session_id):
-        base_string = """DELETE FROM {0} where session_id = '{1}'"""
-        sql_string = base_string.format(self.table_name, session_id)
-        return self.db.update(sql_string)
+        sql_stmt = """DELETE FROM {0} where session_id = %s"""
+        sql_stmt = sql_stmt.format(self.table_name)
+        params = (session_id, )
+        return self.db.update(sql_stmt, params)
 
     def setex(self, session_id, timeout, raw_data):
-        base_string = """INSERT INTO {0} (session_id, expire_date, session_data)
-                    VALUES('{1}', '{2}', '{3}') ON DUPLICATE KEY UPDATE
-                    expire_date='{2}', session_data='{3}'
+        sql_stmt = """INSERT INTO {0} (session_id, expire_date, session_data)
+                    VALUES(%s, %s, %s) ON DUPLICATE KEY UPDATE
+                    expire_date=%s, session_data=%s
                     """
-        exprired = datetime.datetime.now() + \
+        sql_stmt = sql_stmt.format(self.table_name)
+        expired = datetime.datetime.now() + \
             datetime.timedelta(seconds=timeout)
-        exprired = exprired.strftime("%Y-%m-%d %H:%M:%S")
-        sql_string = base_string.format(
-            self.table_name, session_id, exprired, raw_data)
+        expired = expired.strftime("%Y-%m-%d %H:%M:%S")
+        params = (session_id, expired, raw_data, expired, raw_data)
 
-        return self.db.update(sql_string)
+        return self.db.update(sql_stmt, params)
